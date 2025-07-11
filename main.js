@@ -72,6 +72,8 @@ let blockCounter = [];
 let blockHCounter = [];
 let lineHDisplay = [];
 let lineVDisplay = [];
+let colourTransition2D = [];
+let colourTarget2D = [];
 
 function preload() {
   texture = loadImage('assets/grain.png');
@@ -112,9 +114,13 @@ function setup() {
     blockHCounter[i] = [];
     lineHDisplay[i] = setValue();
     lineVDisplay[i] = setValue();
+    colourTransition2D[i] = [];
+    colourTarget2D[i] = [];
     for (let j = 0; j < 70; j++) {
       blockCounter[i][j] = setValue();
       blockHCounter[i][j] = setValue();
+      colourTransition2D[i][j] = 0;
+      colourTarget2D[i][j] = 0;
     }
   }
   panelSet();
@@ -151,6 +157,7 @@ function draw() {
   }
   pointUpdater();
   lineUpdater();
+  colourTransitionUpdater();
   lerpPoints = pointLerper(amount, counter);
   auto(tick);
   gridDisplay();
@@ -407,6 +414,26 @@ function lineUpdater() {
     ////////////////////////////////////////////////////////////
   }
 }
+function colourTransitionUpdater() {
+  for (let i = 0; i < amount - 1; i++) {
+    for (let j = 0; j < amount - 1; j++) {
+      // Determine target color state
+      let targetState = fillColour2D[i][j] >= colourDensity.base ? 1 : 0;
+      
+      // Update target if changed
+      if (colourTarget2D[i][j] !== targetState) {
+        colourTarget2D[i][j] = targetState;
+      }
+      
+      // Smooth transition towards target
+      if (colourTransition2D[i][j] < colourTarget2D[i][j]) {
+        colourTransition2D[i][j] = min(colourTransition2D[i][j] + 0.05, colourTarget2D[i][j]);
+      } else if (colourTransition2D[i][j] > colourTarget2D[i][j]) {
+        colourTransition2D[i][j] = max(colourTransition2D[i][j] - 0.05, colourTarget2D[i][j]);
+      }
+    }
+  }
+}
 function pointLerper(amount, t) {
   let lerpX = [];
   let lerpY = [];
@@ -513,10 +540,6 @@ function lineDisplay() {
 function blockCalc(i, j) {
   let switchLines = 1;
   extrudeChance.base != 0 ? switchLines = 1 : switchLines = 0;
-  let colShift = 0;
-  if (fillColour2D[i][j] >= colourDensity.base) {
-    colShift = 1;
-  }
   let w = lerpPoints.x[i + 1] - lerpPoints.x[i];
   let h = lerpPoints.y[j + 1] - lerpPoints.y[j];
   if (rDisplay2D[i][j] < displayDensity.base) {
@@ -533,7 +556,7 @@ function blockCalc(i, j) {
   let bleed = map(w, 0, minimumSpacing, 0, 1, true) * map(h, 0, minimumSpacing, 0, 1, true) / 4;
   let fade = map(w, 0, minimumSpacing, 0, 1, true) * map(h, 0, minimumSpacing, 0, 1, true);
   let adjust = (strokeW.base * sqrt(2) - strokeW.base) / sqrt(2) * fade * switchLines;
-  let thisCol = loadColour(i, j, colShift);
+  let thisCol = loadColour(i, j, 0); // colShift parameter no longer used
   let sWeight = strokeW.base * fade * switchLines;
   let offset = rHeight2D[i][j] * heightFactor * scaledown * blockCounter[i][j].base * blockHCounter[i][j].base;
   let transpose = createVector(width / 2, height / 2);
@@ -545,7 +568,7 @@ function blockCalc(i, j) {
   p[4] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j] - bleed + adjust - offset);
   p[5] = createVector(transitionPointX + bleed - adjust + offset, lerpPoints.y[j] - bleed + adjust - offset);
   p[6] = createVector(transitionPointX + bleed - adjust + offset, lerpPoints.y[j + 1] + bleed - offset);
-  p[7] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j + 1] + bleed - offset);
+  p[7] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j] - bleed + adjust - offset);
   let adj = minorAdjustment(sWeight);
   p[8] = p[0].copy();
   p[8].add(adj, adj);
@@ -640,9 +663,23 @@ function blockDisplay(input) {
 }
 function loadColour(i, j, colShift) {
   let h, s, l;
-  h = swatchHSL[colourPalette][1 + colShift][rCol2D[i][j]][0] + hueShift;
-  s = swatchHSL[colourPalette][1 + colShift][rCol2D[i][j]][1];
-  l = swatchHSL[colourPalette][1 + colShift][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
+  
+  // Get neutral color (colShift = 0)
+  let neutralH = swatchHSL[colourPalette][1][rCol2D[i][j]][0] + hueShift;
+  let neutralS = swatchHSL[colourPalette][1][rCol2D[i][j]][1];
+  let neutralL = swatchHSL[colourPalette][1][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
+  
+  // Get colorful color (colShift = 1)
+  let colorfulH = swatchHSL[colourPalette][2][rCol2D[i][j]][0] + hueShift;
+  let colorfulS = swatchHSL[colourPalette][2][rCol2D[i][j]][1];
+  let colorfulL = swatchHSL[colourPalette][2][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
+  
+  // Lerp between neutral and colorful based on transition value
+  let transitionValue = colourTransition2D[i][j];
+  h = lerp(neutralH, colorfulH, transitionValue);
+  s = lerp(neutralS, colorfulS, transitionValue);
+  l = lerp(neutralL, colorfulL, transitionValue);
+  
   return {
     h: h,
     s: s,
