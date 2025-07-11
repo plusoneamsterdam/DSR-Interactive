@@ -1,27 +1,30 @@
-var panel1 = QuickSettings.create(630, 50, "Look")
-  .addRange("Block Density", 4, 45, 14, 1)
-  .addRange("Colour Density", 0, 10, 5, 1)
-  .addRange("Display Chance", 0, 10, 10, 1)
-  .addRange("Colour Palette", 0, 4, 1, 1)
-  .addRange("Hue Shift", -100, 100, 0, 1)
-  .addRange("Lightness Variance", 0, 100, 0, 1)
-  .addRange("Extrude Height", 0, 100, 5, 0.1)
-  .addRange("Extrude Chance", 0, 10, 0, 1)
-  
-  var panel2 = QuickSettings.create(850, 50, "Placement")
+var panel0 = QuickSettings.create(630, 50, "Select")
   .addRange("Width", 1, 64, 17, 1)
   .addRange("Height", 1, 64, 31, 1)
+  .addRange("Block Density", 4, 45, 14, 1)
+  .addRange("Colour Density", 0, 10, 5, 1)
+  .addRange("Colour Palette", 0, 4, 1, 1)
+  .addRange("Extrude Chance", 0, 10, 0, 1)
+  .addRange("Transition Speed", 0, 50, 7, 1)
   .addRange("Rotation", 0, 45, 0, 45)
+  .addBoolean("Auto", false)
+
+
+var panel1 = QuickSettings.create(850, 250, "Look")
+  .addRange("Display Chance", 0, 10, 10, 1)
+  .addRange("Hue Shift", -100, 100, 0, 1)
+  .addRange("Lightness Variance", 0, 100, 0, 1)
+  .addRange("Extrude Height", 0, 100, 20, 0.1)
+  
+  var panel2 = QuickSettings.create(850, 50, "Placement")
   .addRange("Bottom Margin", 0, 2, 0, 1)
   .addRange("Position Adjust", -10, 10, 0, 0.1)
   .addRange("Centre Weighted", 0, 10, 0, 1)
   
-  var panel3 = QuickSettings.create(850, 410, "Movement")
-  .addRange("Transition Speed", 0, 50, 7, 1)
+  var panel3 = QuickSettings.create(850, 500, "Movement")
   .addRange("Easing", 1, 10, 5, 1)
   .addRange("Pause", 1, 200, 100, 1)
   .addRange("Refresh", 0, 1, 0.6, 0.1)
-  .addBoolean("Auto", false)
   
   var panel4 = QuickSettings.create(630, 550, "Lines")
   .addRange("Line Weight", 0, 50, 1.5, 0.5)
@@ -31,34 +34,36 @@ var panel1 = QuickSettings.create(630, 50, "Look")
   .addBoolean("Frame", false)
   .addBoolean("Border", false)
 
-  var panel5 = QuickSettings.create(850, 700, "Other")
+  var panel5 = QuickSettings.create(850, 730, "Other")
   .addButton("Print", function () { saveFrame() })
   .addBoolean("Debug", false)
   .addBoolean("Info", false)
   .addRange("Height Calc", 0, 3, 3, 1)
   
 function panelSet() {
-  newAmount = panel1.getValue("Block Density");
-  colourDensity.user = panel1.getValue("Colour Density");
+  gridWidth = panel0.getValue("Width");
+  gridHeight = panel0.getValue("Height");
+  newAmount = panel0.getValue("Block Density");
+  colourDensity.user = panel0.getValue("Colour Density");
+  colourPalette = panel0.getValue("Colour Palette");
+  extrudeChance.user = panel0.getValue("Extrude Chance");
+  increment = panel0.getValue("Transition Speed") * 0.001;
+  displayRotation.user = panel0.getValue("Rotation") / 45;
+  autoMove = panel0.getValue("Auto");
+  
+
   displayDensity.user = panel1.getValue("Display Chance");
-  colourPalette = panel1.getValue("Colour Palette");
   hueShift = panel1.getValue("Hue Shift");
   lightnessVariance.user = panel1.getValue("Lightness Variance");
   heightFactor = panel1.getValue("Extrude Height") * reScale;
-  extrudeChance.user = panel1.getValue("Extrude Chance");
   
-  gridWidth = panel2.getValue("Width");
-  gridHeight = panel2.getValue("Height");
-  displayRotation.user = panel2.getValue("Rotation") / 45;
   newBottomMargin = panel2.getValue("Bottom Margin");
   positionAdjust.user = panel2.getValue("Position Adjust") * blockUnit;
   centreWeighted.user = panel2.getValue("Centre Weighted"); 
   
-  increment = panel3.getValue("Transition Speed") * 0.001;
   easy = panel3.getValue("Easing");
   pause = panel3.getValue("Pause");
   pointRefresh = panel3.getValue("Refresh");
-  autoMove = panel3.getValue("Auto");
   
   strokeW.user = panel4.getValue("Line Weight") * reScale;
   strokeWB.user = panel4.getValue("Line Weight B") * reScale;
@@ -73,43 +78,43 @@ function panelSet() {
 
 }
 
-function updateObj() {
-  variables = {
-    BlockDensity: panel1.getValue("Block Density"),
-    ColourDensity: panel1.getValue("Colour Density"),
-    DisplayChance: panel1.getValue("Display Chance"),
-    ColourPalette: panel1.getValue("Colour Palette"),
-    HueShift: panel1.getValue("Hue Shift"),
-    LightnessVariance: panel1.getValue("Lightness Variance"),
-    ExtrudeHeight: panel1.getValue("Extrude Height"),
-    ExtrudeChance: panel1.getValue("Extrude Chance"),
-    ScaleToZero: panel1.getValue("Scale to Zero"),
+// function updateObj() {
+//   variables = {
+//     BlockDensity: panel1.getValue("Block Density"),
+//     ColourDensity: panel1.getValue("Colour Density"),
+//     DisplayChance: panel1.getValue("Display Chance"),
+//     ColourPalette: panel1.getValue("Colour Palette"),
+//     HueShift: panel1.getValue("Hue Shift"),
+//     LightnessVariance: panel1.getValue("Lightness Variance"),
+//     ExtrudeHeight: panel1.getValue("Extrude Height"),
+//     ExtrudeChance: panel1.getValue("Extrude Chance"),
+//     ScaleToZero: panel1.getValue("Scale to Zero"),
     
-    GridWidth: panel2.getValue("Width"),
-    GridHeight: panel2.getValue("Height"),
-    Rotation: panel2.getValue("Rotation"),
-    BottomMargin: panel2.getValue("Bottom Margin"),
-    PositionAdjust: panel2.getValue("Position Adjust"),
-    CentreWeighted: panel2.getValue("Centre Weighted"),
+//     GridWidth: panel2.getValue("Width"),
+//     GridHeight: panel2.getValue("Height"),
+//     Rotation: panel2.getValue("Rotation"),
+//     BottomMargin: panel2.getValue("Bottom Margin"),
+//     PositionAdjust: panel2.getValue("Position Adjust"),
+//     CentreWeighted: panel2.getValue("Centre Weighted"),
     
-    TransitionSpeed: panel3.getValue("Transition Speed"),
-    Easing: panel3.getValue("Easing"),
-    Pause: panel3.getValue("Pause"),
-    PointRefresh: panel3.getValue("Refresh"),
-    AutoMove: panel3.getValue("Auto"),
+//     TransitionSpeed: panel3.getValue("Transition Speed"),
+//     Easing: panel3.getValue("Easing"),
+//     Pause: panel3.getValue("Pause"),
+//     PointRefresh: panel3.getValue("Refresh"),
+//     AutoMove: panel3.getValue("Auto"),
 
-    LineWeight: panel4.getValue("Line Weight"),
-    LineWeightB: panel4.getValue("Line Weight B"),
-    StrokeChance: panel4.getValue("Display Chance"),
-    StrokeBalance: panel4.getValue("Balance"),
-    Frame: panel4.getValue("Frame"),
-    Border: panel4.getValue("Border"),
+//     LineWeight: panel4.getValue("Line Weight"),
+//     LineWeightB: panel4.getValue("Line Weight B"),
+//     StrokeChance: panel4.getValue("Display Chance"),
+//     StrokeBalance: panel4.getValue("Balance"),
+//     Frame: panel4.getValue("Frame"),
+//     Border: panel4.getValue("Border"),
 
-    Bug: panel5.getValue("Debug"),
-    Info: panel5.getValue("Info"),
-    HeightCalc: panel5.getValue("Height Calc")
-  }
-}
+//     Bug: panel5.getValue("Debug"),
+//     Info: panel5.getValue("Info"),
+//     HeightCalc: panel5.getValue("Height Calc")
+//   }
+// }
 function saveFrame() {
   // updateObj();
   // console.log(variables);
@@ -129,3 +134,8 @@ function saveFrame() {
 function pad(num) {
   return num < 10 ? '0' + num : num;
 }
+panel1.collapse();
+panel2.collapse();
+panel3.collapse();
+panel4.collapse();
+panel5.collapse();

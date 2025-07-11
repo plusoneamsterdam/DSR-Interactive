@@ -218,19 +218,19 @@ function listen() {
 function auto(tempo) {
   if (!autoPaused && frameCount % pause == 0 && tempo % 3 == 0 && autoMove) {
     newAmount = Math.floor(random(4, 31));
-    panel1.setValue("Block Density", newAmount);
+    panel0.setValue("Block Density", newAmount);
     autoValue(displayDensity, 3, 10, 50);
     panel1.setValue("Display Chance", displayDensity.to);
     autoValue(colourDensity, 0, 10, 50);
-    panel1.setValue("Colour Density", colourDensity.to);
+    panel0.setValue("Colour Density", colourDensity.to);
     autoValue(displayRotation, 0, 1, 50);
-    panel2.setValue("Rotation", displayRotation.to * 45);
+    panel0.setValue("Rotation", displayRotation.to * 45);
     autoValue(extrudeChance, 0, 10, 50);
-    panel1.setValue("Extrude Chance", extrudeChance.to);
+    panel0.setValue("Extrude Chance", extrudeChance.to);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;
-    panel2.setValue("Width", gridWidth);
+    panel0.setValue("Width", gridWidth);
     random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
-    panel2.setValue("Height", gridHeight);
+    panel0.setValue("Height", gridHeight);
     // 
     autoValue(strokeChance, 0, 3, 50);
     panel4.setValue("Display Chance", strokeChance.to);
