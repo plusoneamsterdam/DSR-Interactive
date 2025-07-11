@@ -568,7 +568,7 @@ function blockCalc(i, j) {
   p[4] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j] - bleed + adjust - offset);
   p[5] = createVector(transitionPointX + bleed - adjust + offset, lerpPoints.y[j] - bleed + adjust - offset);
   p[6] = createVector(transitionPointX + bleed - adjust + offset, lerpPoints.y[j + 1] + bleed - offset);
-  p[7] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j] - bleed + adjust - offset);
+  p[7] = createVector(lerpPoints.x[i] - bleed + offset, lerpPoints.y[j + 1] - bleed + adjust - offset);
   let adj = minorAdjustment(sWeight);
   p[8] = p[0].copy();
   p[8].add(adj, adj);
