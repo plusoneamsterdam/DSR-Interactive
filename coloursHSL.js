@@ -21,8 +21,8 @@ swatchHSL[0][1][4] = [48, 100, 50]; // Y
 swatchHSL[0][2][0] = [0, 0, 80];
 swatchHSL[0][2][1] = [0, 0, 80];
 swatchHSL[0][2][2] = [0, 0, 80];
-swatchHSL[0][2][3] = [0, 0, 50];
-swatchHSL[0][2][4] = [0, 0, 60];
+swatchHSL[0][2][3] = [48, 0, 50];
+swatchHSL[0][2][4] = [48, 0, 60];
 
 // classic 
 // base
@@ -37,10 +37,10 @@ swatchHSL[1][1][3] = [48, 81, 59]; // Y
 swatchHSL[1][1][4] = [229, 38, 33]; // B 
 // neutral
 swatchHSL[1][2][0] = [0, 0, 97];
-swatchHSL[1][2][1] = [0, 0, 97];
-swatchHSL[1][2][2] = [30, 6, 87];
-swatchHSL[1][2][3] = [0, 0, 83];
-swatchHSL[1][2][4] = [0, 0, 83];
+swatchHSL[1][2][1] = [228, 0, 97];
+swatchHSL[1][2][2] = [12, 0, 83];
+swatchHSL[1][2][3] = [30, 6, 87];
+swatchHSL[1][2][4] = [229, 0, 83];
 
 // gold 
 // base
@@ -54,10 +54,10 @@ swatchHSL[2][1][3] = [51, 56, 33]; // GOLD
 swatchHSL[2][1][4] = [229, 38, 33]; // B 
 // neutral
 swatchHSL[2][2][0] = [0, 0, 97];
-swatchHSL[2][2][1] = [0, 0, 97];
-swatchHSL[2][2][2] = [30, 6, 87];
-swatchHSL[2][2][3] = [0, 0, 83];
-swatchHSL[2][2][4] = [0, 0, 83];
+swatchHSL[2][2][1] = [228, 0, 97];
+swatchHSL[2][2][2] = [12, 0, 83];
+swatchHSL[2][2][3] = [30, 6, 87];
+swatchHSL[2][2][4] = [229, 0, 83];
 
 // green 
 // base
@@ -71,10 +71,10 @@ swatchHSL[3][1][3] = [46, 84, 48]; // Y
 swatchHSL[3][1][4] = [213, 31, 25]; // B 
 // neutral
 swatchHSL[3][2][0] = [44, 10, 79];
-swatchHSL[3][2][1] = [44, 10, 79];
+swatchHSL[3][2][1] = [228, 10, 79];
 swatchHSL[3][2][2] = [44, 10, 79];
 swatchHSL[3][2][3] = [40, 4, 85];
-swatchHSL[3][2][4] = [40, 4, 85];
+swatchHSL[3][2][4] = [213, 4, 85];
 
 // inverse 
 // base
