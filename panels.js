@@ -1,6 +1,6 @@
 var panel0 = QuickSettings.create(630, 50, "Select")
   .addRange("Width", 1, 64, 17, 1)
-  .addRange("Height", 1, 64, 31, 1)
+  .addRange("Height", 1, 64, 17, 1)
   .addRange("Block Density", 4, 45, 14, 1)
   .addRange("Colour Density", 0, 10, 5, 1)
   .addRange("Colour Palette", 0, 4, 1, 1)
@@ -39,10 +39,17 @@ var panel1 = QuickSettings.create(850, 250, "Look")
   .addBoolean("Debug", false)
   .addBoolean("Info", false)
   .addRange("Height Calc", 0, 3, 3, 1)
+  .addBoolean("Size Link", true)
   
 function panelSet() {
+  sizeLink = panel5.getValue("Size Link");
   gridWidth = panel0.getValue("Width");
-  gridHeight = panel0.getValue("Height");
+  if (sizeLink) {
+    gridHeight = gridWidth;
+    panel0.setValue("Height", gridHeight);
+  } else {  
+    gridHeight = panel0.getValue("Height");
+  }
   newAmount = panel0.getValue("Block Density");
   colourDensity.user = panel0.getValue("Colour Density");
   colourPalette = panel0.getValue("Colour Palette");
@@ -51,7 +58,6 @@ function panelSet() {
   displayRotation.user = panel0.getValue("Rotation") / 45;
   autoMove = panel0.getValue("Auto");
   
-
   displayDensity.user = panel1.getValue("Display Chance");
   hueShift = panel1.getValue("Hue Shift");
   lightnessVariance.user = panel1.getValue("Lightness Variance");
@@ -75,7 +81,7 @@ function panelSet() {
   bug = panel5.getValue("Debug");
   info = panel5.getValue("Info");
   heightCalc = panel5.getValue("Height Calc");
-
+  
 }
 
 // function updateObj() {

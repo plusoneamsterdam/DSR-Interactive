@@ -56,7 +56,7 @@ let fps = 0;
 let lerpPoints;
 let reScale;
 let bug, info;
-
+let sizeLink;
 let updateNext = false;
 let colourPalette = 0;
 let hueShift = 0;
@@ -229,7 +229,11 @@ function auto(tempo) {
     panel0.setValue("Extrude Chance", extrudeChance.to);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;
     panel0.setValue("Width", gridWidth);
-    random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
+    if (sizeLink) {
+      gridHeight = gridWidth;
+    } else {  
+      random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
+    }
     panel0.setValue("Height", gridHeight);
     // 
     autoValue(strokeChance, 0, 3, 50);
