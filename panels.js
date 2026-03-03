@@ -1,17 +1,15 @@
-var panel0 = QuickSettings.create(630, 50, "Select")
-  .addRange("Width", 1, 64, 17, 1)
-  .addRange("Height", 1, 64, 17, 1)
-  .addRange("Block Density", 4, 45, 14, 1)
-  .addRange("Colour Density", 0, 10, 5, 1)
-  .addRange("Colour Palette", 0, 4, 1, 1)
-  .addRange("Extrude Chance", 0, 10, 0, 1)
-  .addRange("Transition Speed", 0, 50, 7, 1)
-  .addRange("Rotation", 0, 45, 0, 45)
+var panel0 = QuickSettings.create(630, 50, "Shortlist")
+  .addRange("Size", 1, 64, 17, 1)
+  .addRange("Density", 4, 30, 14, 1)
+  .addRange("Colour", 0, 10, 5, 1)
+  .addRange("Visibility", 0, 10, 10, 1)
+  .addRange("Lines", 0, 10, 2, 1)
+  .addRange("Look", 0, 4, 1, 1)
+  .addRange("Extrude", 0, 10, 0, 1)
+  .addButton("Rotate", function () { toggleRotate() })
   .addBoolean("Auto", false)
-
-
-var panel1 = QuickSettings.create(850, 250, "Look")
-  .addRange("Display Chance", 0, 10, 10, 1)
+  
+  var panel1 = QuickSettings.create(850, 250, "Look")
   .addRange("Hue Shift", -100, 100, 0, 1)
   .addRange("Lightness Variance", 0, 100, 0, 1)
   .addRange("Extrude Height", 0, 100, 20, 0.1)
@@ -22,6 +20,7 @@ var panel1 = QuickSettings.create(850, 250, "Look")
   .addRange("Centre Weighted", 0, 10, 0, 1)
   
   var panel3 = QuickSettings.create(850, 500, "Movement")
+  .addRange("Transition Speed", 0, 50, 7, 1)
   .addRange("Easing", 1, 10, 5, 1)
   .addRange("Pause", 1, 200, 100, 1)
   .addRange("Refresh", 0, 1, 0.6, 0.1)
@@ -29,7 +28,6 @@ var panel1 = QuickSettings.create(850, 250, "Look")
   var panel4 = QuickSettings.create(630, 550, "Lines")
   .addRange("Line Weight", 0, 50, 1.5, 0.5)
   .addRange("Line Weight B", 0, 50, 20, 0.5)
-  .addRange("Display Chance", 0, 10, 2, 1)
   .addRange("Balance", 0, 10, 3, 1)
   .addBoolean("Frame", false)
   .addBoolean("Border", false)
@@ -40,25 +38,31 @@ var panel1 = QuickSettings.create(850, 250, "Look")
   .addBoolean("Info", false)
   .addRange("Height Calc", 0, 3, 3, 1)
   .addBoolean("Size Link", true)
+
+// Track toggle state for the Rotate button
+let isRotated = false;
   
 function panelSet() {
   sizeLink = panel5.getValue("Size Link");
-  gridWidth = panel0.getValue("Width");
+  gridWidth = panel0.getValue("Size");
   if (sizeLink) {
     gridHeight = gridWidth;
-    panel0.setValue("Height", gridHeight);
+   //panel0.setValue("Height", gridHeight);
   } else {  
-    gridHeight = panel0.getValue("Height");
+    //gridHeight = panel0.getValue("Height");
   }
-  newAmount = panel0.getValue("Block Density");
-  colourDensity.user = panel0.getValue("Colour Density");
-  colourPalette = panel0.getValue("Colour Palette");
-  extrudeChance.user = panel0.getValue("Extrude Chance");
-  increment = panel0.getValue("Transition Speed") * 0.001;
-  displayRotation.user = panel0.getValue("Rotation") / 45;
+  newAmount = panel0.getValue("Density");
+  colourDensity.user = panel0.getValue("Colour");
+  displayDensity.user = panel0.getValue("Visibility");
+  strokeChance.user = panel0.getValue("Lines"); 
+  colourPalette = panel0.getValue("Look");
+  extrudeChance.user = panel0.getValue("Extrude");
   autoMove = panel0.getValue("Auto");
+
+  // Frame on when Lines is 10, off otherwise
+  frameLine = strokeChance.user === 10;
+  panel4.setValue("Frame", frameLine);
   
-  displayDensity.user = panel1.getValue("Display Chance");
   hueShift = panel1.getValue("Hue Shift");
   lightnessVariance.user = panel1.getValue("Lightness Variance");
   heightFactor = panel1.getValue("Extrude Height") * reScale;
@@ -67,15 +71,14 @@ function panelSet() {
   positionAdjust.user = panel2.getValue("Position Adjust") * blockUnit;
   centreWeighted.user = panel2.getValue("Centre Weighted"); 
   
+  increment = panel3.getValue("Transition Speed") * 0.001;
   easy = panel3.getValue("Easing");
   pause = panel3.getValue("Pause");
   pointRefresh = panel3.getValue("Refresh");
   
   strokeW.user = panel4.getValue("Line Weight") * reScale;
   strokeWB.user = panel4.getValue("Line Weight B") * reScale;
-  strokeChance.user = panel4.getValue("Display Chance"); 
   strokeVariance.user = panel4.getValue("Balance"); 
-  frameLine = panel4.getValue("Frame");
   border = panel4.getValue("Border");
 
   bug = panel5.getValue("Debug");
@@ -84,43 +87,14 @@ function panelSet() {
   
 }
 
-// function updateObj() {
-//   variables = {
-//     BlockDensity: panel1.getValue("Block Density"),
-//     ColourDensity: panel1.getValue("Colour Density"),
-//     DisplayChance: panel1.getValue("Display Chance"),
-//     ColourPalette: panel1.getValue("Colour Palette"),
-//     HueShift: panel1.getValue("Hue Shift"),
-//     LightnessVariance: panel1.getValue("Lightness Variance"),
-//     ExtrudeHeight: panel1.getValue("Extrude Height"),
-//     ExtrudeChance: panel1.getValue("Extrude Chance"),
-//     ScaleToZero: panel1.getValue("Scale to Zero"),
-    
-//     GridWidth: panel2.getValue("Width"),
-//     GridHeight: panel2.getValue("Height"),
-//     Rotation: panel2.getValue("Rotation"),
-//     BottomMargin: panel2.getValue("Bottom Margin"),
-//     PositionAdjust: panel2.getValue("Position Adjust"),
-//     CentreWeighted: panel2.getValue("Centre Weighted"),
-    
-//     TransitionSpeed: panel3.getValue("Transition Speed"),
-//     Easing: panel3.getValue("Easing"),
-//     Pause: panel3.getValue("Pause"),
-//     PointRefresh: panel3.getValue("Refresh"),
-//     AutoMove: panel3.getValue("Auto"),
+function toggleRotate() {
+  // Toggle between 0° and 45° using the existing easing/value system
+  isRotated = !isRotated;
+  const targetRotation = isRotated ? 1 : 0; // 1 = 45°, 0 = 0°
+  // Use the value system to lerp to the new rotation
+  displayRotation.user = targetRotation;
+}
 
-//     LineWeight: panel4.getValue("Line Weight"),
-//     LineWeightB: panel4.getValue("Line Weight B"),
-//     StrokeChance: panel4.getValue("Display Chance"),
-//     StrokeBalance: panel4.getValue("Balance"),
-//     Frame: panel4.getValue("Frame"),
-//     Border: panel4.getValue("Border"),
-
-//     Bug: panel5.getValue("Debug"),
-//     Info: panel5.getValue("Info"),
-//     HeightCalc: panel5.getValue("Height Calc")
-//   }
-// }
 function saveFrame() {
   // updateObj();
   // console.log(variables);
