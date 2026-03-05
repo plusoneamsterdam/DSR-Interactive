@@ -67,6 +67,7 @@ let heightCalc;
 let scaledown;
 let autoMove;
 let tick = 0;
+let fromMargins, toMargins;
 
 let blockCounter = [];
 let blockHCounter = [];
@@ -128,8 +129,9 @@ function setup() {
   amount = newAmount;
   lerpTo = amount;
   minimumSpacing = 40 * reScale;
-  bottomMargin = newBottomMargin;
-  margins = marginCalc(gridWidth, gridHeight, bottomMargin);
+  margins = marginCalc(gridWidth, gridHeight, newBottomMargin);
+  fromMargins = margins;
+  toMargins = margins;
   points = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, amount, minimumSpacing);
   newPoints = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, amount, minimumSpacing);
   rHeight2D = random2D(amount * amount + 100, 1, 7);
@@ -151,9 +153,12 @@ function draw() {
     counter += increment;
   }
   listen();
-  console.log(gridWidth, gridHeight);
-  margins = marginCalc(gridWidth, gridHeight, bottomMargin);
-  console.log(margins);
+  margins = {
+    startX: lerp(fromMargins.startX, toMargins.startX, ezEase(counter, easy)),
+    endX:   lerp(fromMargins.endX,   toMargins.endX,   ezEase(counter, easy)),
+    startY: lerp(fromMargins.startY, toMargins.startY, ezEase(counter, easy)),
+    endY:   lerp(fromMargins.endY,   toMargins.endY,   ezEase(counter, easy))
+  };
   if (frameCount % pause == 0 && counter >= 1) {
     tick++;
   }
@@ -364,47 +369,54 @@ function pointUpdater() {
     if (amount <= newAmount) {
       points = newPoints;
     }
+
+    // commit current margin target as the new start, then compute new target
+    fromMargins = toMargins;
+    toMargins = marginCalc(gridWidth, gridHeight, newBottomMargin);
+    let marginsChanged = (
+      toMargins.startX !== fromMargins.startX || toMargins.endX !== fromMargins.endX ||
+      toMargins.startY !== fromMargins.startY || toMargins.endY !== fromMargins.endY
+    );
+
     if (amount == newAmount) {
-      newPoints = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, amount, minimumSpacing, 1);
+      newPoints = pointMaker(toMargins.startX, toMargins.startY, toMargins.endX, toMargins.endY, amount, minimumSpacing, marginsChanged ? 0 : 1);
       diffCount = 0;
       updateNext = false;
     }
     if (amount < newAmount) { // points added
       let diff = newAmount - amount;
       diffCount = 0;
-      let borderX = points.x[points.x.length - 1]
-      let borderY = points.y[points.y.length - 1]
+      let borderX = points.x[points.x.length - 1];
+      let borderY = points.y[points.y.length - 1];
       for (let i = 0; i < diff; i++) {
         points.x.push(borderX);
         points.y.push(borderY);
-        // points.x.push(margins.endX); // original
-        // points.y.push(margins.endY);
       }
       amount = newAmount;
-      newPoints = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, amount, minimumSpacing);
+      newPoints = pointMaker(toMargins.startX, toMargins.startY, toMargins.endX, toMargins.endY, amount, minimumSpacing);
       updateNext = false;
     }
     if (amount > newAmount && updateNext == false) { // points removed
       let diff = amount - newAmount;
       points = newPoints;
-      newPoints = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, newAmount, minimumSpacing);
+      newPoints = pointMaker(toMargins.startX, toMargins.startY, toMargins.endX, toMargins.endY, newAmount, minimumSpacing);
       for (let i = 0; i < diff; i++) {
-        newPoints.x.push(margins.endX);
-        newPoints.y.push(margins.endY);
+        newPoints.x.push(toMargins.endX);
+        newPoints.y.push(toMargins.endY);
       }
       updateNext = true;
     } else if (amount > newAmount && updateNext == true) {
       let diff = amount - newAmount;
       points = newPoints;
       amount = newAmount;
-      newPoints = pointMaker(margins.startX, margins.startY, margins.endX, margins.endY, amount, minimumSpacing);
+      newPoints = pointMaker(toMargins.startX, toMargins.startY, toMargins.endX, toMargins.endY, amount, minimumSpacing);
       points.x.splice(points.x.length, diff);
       points.y.splice(points.y.length, diff);
       updateNext = false;
     }
-    
+
     counter = 0;
-    lerpTo = newAmount; // <<< update to new method? // YES
+    lerpTo = newAmount;
   }
 }
 function lineUpdater() {
