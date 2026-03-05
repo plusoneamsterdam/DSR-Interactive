@@ -34,12 +34,16 @@ function listenforValue(input) {
         copyValue(input);
     }
 }
-function autoValue(input, min, max, chance, floor = true) {
+function autoValue(input, min, max, chance, floor = true, minWeight = 0) {
     if(!valuePause[input.index]){
         if (random(100) < chance){
-            max = floor ? max + 1 : max;
-            input.to = random(min, max);
-            input.to = floor ? Math.floor(input.to) : input.to;
+            if (minWeight > 0 && random(100) < minWeight) {
+                input.to = min;
+            } else {
+                max = floor ? max + 1 : max;
+                input.to = random(min, max);
+                input.to = floor ? Math.floor(input.to) : input.to;
+            }
             copyValue(input);
         }
         valuePause[input.index] = true;

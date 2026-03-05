@@ -233,7 +233,7 @@ function auto(tempo) {
     if(random() < 0.2) {
       toggleRotate();
     }
-    autoValue(extrudeChance, 0, 10, 50);
+    autoValue(extrudeChance, 0, 10, 50, true, 20);
     panel0.setValue("Extrude", extrudeChance.to);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;
     panel0.setValue("Size", gridWidth);
@@ -245,17 +245,20 @@ function auto(tempo) {
     }
     panel0.setValue("Size", gridHeight);
     // 
-    autoValue(strokeChance, 0, 3, 50);
-    panel0.setValue("Lines", strokeChance.to);
-    autoValue(strokeVariance, 0, 5, 50);
-    panel4.setValue("Balance", strokeVariance.to);
-    autoValue(centreWeighted, 0, 10, 10);
-    panel2.setValue("Centre Weighted", centreWeighted.to);
-    for (let i = 0; i < 70; i++) {
-      autoValue(lineHDisplay[i], 0, 1, 50, true);
-      autoValue(lineVDisplay[i], 0, 1, 50, true);
-    }
+   
+}
+function autoRedundant(tempo){
+  autoValue(strokeChance, 0, 3, 50);
+  panel0.setValue("Lines", strokeChance.to);
+  autoValue(strokeVariance, 0, 5, 50);
+  panel4.setValue("Balance", strokeVariance.to);
+  autoValue(centreWeighted, 0, 10, 10);
+  panel2.setValue("Centre Weighted", centreWeighted.to);
+  for (let i = 0; i < 70; i++) {
+    autoValue(lineHDisplay[i], 0, 1, 50, true);
+    autoValue(lineVDisplay[i], 0, 1, 50, true);
   }
+}
 }
 function marginCalc(artWidth, artHeight, bot) {
   let a = artWidth * blockUnit;
