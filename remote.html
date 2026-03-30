@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 14px;
+            margin: 20px 0 15px 0;
+            padding-top: 15px;
+            border-top: 2px solid #007AFF;
+            color: #007AFF;
+            font-weight: bold;
+        }
+
+        h2:first-of-type {
+            border-top: none;
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .label-with-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .value-display {
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 8px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #005BBD;
+        }
+
+        button:active {
+            background: #004499;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .checkbox-label input {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎛️ Control Panel</h1>
+
+        <h2>Shortlist</h2>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Size</label>
+                <span class="value-display" id="sizeValue">17</span>
+            </div>
+            <input type="range" id="size" min="1" max="64" value="17">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Density</label>
+                <span class="value-display" id="densityValue">14</span>
+            </div>
+            <input type="range" id="density" min="4" max="30" value="14">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Colour</label>
+                <span class="value-display" id="colourValue">5</span>
+            </div>
+            <input type="range" id="colour" min="0" max="10" value="5">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Visibility</label>
+                <span class="value-display" id="visibilityValue">10</span>
+            </div>
+            <input type="range" id="visibility" min="0" max="10" value="10">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Lines</label>
+                <span class="value-display" id="linesValue">2</span>
+            </div>
+            <input type="range" id="lines" min="0" max="10" value="2">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Look (Palette)</label>
+                <span class="value-display" id="lookValue">1</span>
+            </div>
+            <input type="range" id="look" min="0" max="4" value="1">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Extrude</label>
+                <span class="value-display" id="extrudeValue">0</span>
+            </div>
+            <input type="range" id="extrude" min="0" max="10" value="0">
+        </div>
+
+        <div class="control-group">
+            <button id="rotateBtn">🔄 Rotate</button>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="auto" value="false">
+                Auto
+            </label>
+        </div>
+
+        <h2>Look</h2>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Hue Shift</label>
+                <span class="value-display" id="hueShiftValue">0</span>
+            </div>
+            <input type="range" id="hueShift" min="-100" max="100" value="0">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Lightness Variance</label>
+                <span class="value-display" id="lightnessVarianceValue">0</span>
+            </div>
+            <input type="range" id="lightnessVariance" min="0" max="100" value="0">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Extrude Height</label>
+                <span class="value-display" id="extrudeHeightValue">20</span>
+            </div>
+            <input type="range" id="extrudeHeight" min="0" max="100" value="20" step="0.1">
+        </div>
+
+        <h2>Placement</h2>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Bottom Margin</label>
+                <span class="value-display" id="bottomMarginValue">0</span>
+            </div>
+            <input type="range" id="bottomMargin" min="0" max="2" value="0">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Position Adjust</label>
+                <span class="value-display" id="positionAdjustValue">0</span>
+            </div>
+            <input type="range" id="positionAdjust" min="-10" max="10" value="0" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Centre Weighted</label>
+                <span class="value-display" id="centreWeightedValue">0</span>
+            </div>
+            <input type="range" id="centreWeighted" min="0" max="10" value="0">
+        </div>
+
+        <h2>Movement</h2>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Transition Speed</label>
+                <span class="value-display" id="transitionSpeedValue">7</span>
+            </div>
+            <input type="range" id="transitionSpeed" min="0" max="50" value="7">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Easing</label>
+                <span class="value-display" id="easingValue">5</span>
+            </div>
+            <input type="range" id="easing" min="1" max="10" value="5">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Pause</label>
+                <span class="value-display" id="pauseValue">100</span>
+            </div>
+            <input type="range" id="pause" min="1" max="200" value="100">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Refresh</label>
+                <span class="value-display" id="refreshValue">0.6</span>
+            </div>
+            <input type="range" id="refresh" min="0" max="1" value="0.6" step="0.1">
+        </div>
+
+        <h2>Lines</h2>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Line Weight</label>
+                <span class="value-display" id="lineWeightValue">1.5</span>
+            </div>
+            <input type="range" id="lineWeight" min="0" max="50" value="1.5" step="0.5">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Line Weight B</label>
+                <span class="value-display" id="lineWeightBValue">20</span>
+            </div>
+            <input type="range" id="lineWeightB" min="0" max="50" value="20" step="0.5">
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Balance</label>
+                <span class="value-display" id="balanceValue">3</span>
+            </div>
+            <input type="range" id="balance" min="0" max="10" value="3">
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="frame" value="false">
+                Frame
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="border" value="false">
+                Border
+            </label>
+        </div>
+
+        <h2>Other</h2>
+
+        <div class="control-group">
+            <button id="printBtn">🖨️ Print / Save</button>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="debug" value="false">
+                Debug
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="info" value="false">
+                Info
+            </label>
+        </div>
+
+        <div class="control-group">
+            <div class="label-with-value">
+                <label>Height Calc</label>
+                <span class="value-display" id="heightCalcValue">3</span>
+            </div>
+            <input type="range" id="heightCalc" min="0" max="3" value="3">
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="sizeLink" checked>
+                Size Link
+            </label>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = window.io();
+
+        function sendControlUpdate() {
+            const data = {
+                size: parseFloat(document.getElementById('size').value),
+                density: parseFloat(document.getElementById('density').value),
+                colour: parseFloat(document.getElementById('colour').value),
+                visibility: parseFloat(document.getElementById('visibility').value),
+                lines: parseFloat(document.getElementById('lines').value),
+                look: parseFloat(document.getElementById('look').value),
+                extrude: parseFloat(document.getElementById('extrude').value),
+                auto: document.getElementById('auto').checked,
+
+                hueShift: parseFloat(document.getElementById('hueShift').value),
+                lightnessVariance: parseFloat(document.getElementById('lightnessVariance').value),
+                extrudeHeight: parseFloat(document.getElementById('extrudeHeight').value),
+
+                bottomMargin: parseFloat(document.getElementById('bottomMargin').value),
+                positionAdjust: parseFloat(document.getElementById('positionAdjust').value),
+                centreWeighted: parseFloat(document.getElementById('centreWeighted').value),
+
+                transitionSpeed: parseFloat(document.getElementById('transitionSpeed').value),
+                easing: parseFloat(document.getElementById('easing').value),
+                pause: parseFloat(document.getElementById('pause').value),
+                refresh: parseFloat(document.getElementById('refresh').value),
+
+                lineWeight: parseFloat(document.getElementById('lineWeight').value),
+                lineWeightB: parseFloat(document.getElementById('lineWeightB').value),
+                balance: parseFloat(document.getElementById('balance').value),
+                frame: document.getElementById('frame').checked,
+                border: document.getElementById('border').checked,
+
+                debug: document.getElementById('debug').checked,
+                info: document.getElementById('info').checked,
+                heightCalc: parseFloat(document.getElementById('heightCalc').value),
+                sizeLink: document.getElementById('sizeLink').checked
+            };
+
+            socket.emit('send-to-display', data);
+        }
+
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const valueId = e.target.id + 'Value';
+                const display = document.getElementById(valueId);
+                if (display) {
+                    display.textContent = e.target.value;
+                }
+                sendControlUpdate();
+            });
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', sendControlUpdate);
+        });
+
+        document.getElementById('rotateBtn').addEventListener('click', () => {
+            console.log('Button: Rotate pressed');
+            socket.emit('send-to-display', { button: 'rotate' });
+        });
+
+        document.getElementById('printBtn').addEventListener('click', () => {
+            console.log('Button: Print pressed');
+            socket.emit('send-to-display', { button: 'print' });
+        });
+
+        socket.on('connect', () => {
+            console.log('Remote connected to server');
+            setTimeout(sendControlUpdate, 500);
+        });
+    </script>
+</body>
+
+</html>

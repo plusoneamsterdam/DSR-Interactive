@@ -1,0 +1,18 @@
+{
+  "name": "dsr-interactive",
+  "version": "1.0.0",
+  "description": "DSR Interactive Project",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^4.18.2",
+    "socket.io": "^4.8.3"
+  }
+}

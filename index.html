@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DSR Interactive</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="assets/style.css">
-    
-    <script src="libraries/p5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quicksettings@latest/quicksettings.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/p5.capture@1.4.1/dist/p5.capture.umd.min.js"></script> -->
-  </head>
+  <title>Display</title>
 
-  <body>
-    <script src="panels.js"></script>
-    <script src="values.js"></script>
-    <script src="coloursHSL.js"></script>
-    <script src="main.js"></script>
-  </body>
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="assets/style.css">
+
+  <script src="libraries/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quicksettings@latest/quicksettings.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/p5.capture@1.4.1/dist/p5.capture.umd.min.js"></script> -->
+</head>
+
+<body>
+  <div id="qr-container" style="position: fixed; top: 20px; right: 20px; background: white; padding: 15px; border-radius: 8px; z-index: 1000;">
+    <div id="qr"></div>
+    <a id="url" href="" target="_blank" style="display: block; margin-top: 10px; font-size: 12px; text-decoration: none; color: #0066cc; word-break: break-all;"></a>
+  </div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="src/values.js"></script>
+  <script src="src/coloursHSL.js"></script>
+  <script src="src/main.js"></script>
+</body>
+
 </html>

@@ -77,7 +77,7 @@ let colourTransition2D = [];
 let colourTarget2D = [];
 
 function preload() {
-  texture = loadImage('assets/grain.png');
+  texture = loadImage('../assets/grain.png');
 }
 function textureOverlay() {
   push();
@@ -124,8 +124,43 @@ function setup() {
       colourTarget2D[i][j] = 0;
     }
   }
-  panelSet();
   colorMode(HSL);
+
+  // Initialize default values
+  sizeLink = true;
+  gridWidth = 17;
+  gridHeight = 17;
+  newAmount = 14;
+  colourDensity.user = 5;
+  displayDensity.user = 10;
+  strokeChance.user = 2;
+  colourPalette = 1;
+  extrudeChance.user = 0;
+  autoMove = false;
+
+  hueShift = 0;
+  lightnessVariance.user = 0;
+  heightFactor = 20 * reScale;
+
+  newBottomMargin = 0;
+  positionAdjust.user = 0;
+  centreWeighted.user = 0;
+
+  increment = 7 * 0.001;
+  easy = 5;
+  pause = 100;
+  pointRefresh = 0.6;
+
+  strokeW.user = 1.5 * reScale;
+  strokeWB.user = 20 * reScale;
+  strokeVariance.user = 3;
+  frameLine = false;
+  border = false;
+
+  bug = false;
+  info = false;
+  heightCalc = 3;
+
   amount = newAmount;
   lerpTo = amount;
   minimumSpacing = 40 * reScale;
@@ -144,20 +179,187 @@ function setup() {
   fillColour2D = random2D(amount * amount + 100, 0, 10);
   rCol2D = random2D(amount * amount + 100, 0, swatchHSL[0][1].length);
   strokeCap(SQUARE);
+
+  // Socket.io listener for remote panel updates - create socket but don't require it for display to work
+  try {
+    const socket = window.io();
+
+    console.log('Socket created:', socket);
+
+    // Disconnect any existing listeners first
+    socket.off();
+
+    // Set up socket listeners
+    socket.on('connect', () => {
+      console.log('%c✓ SOCKET CONNECTED', 'color: green; font-weight: bold;', 'ID:', socket.id);
+
+      const url = `${new URL(`remote.html?id=${socket.id}`, window.location)}`;
+      console.log('Generated URL:', url);
+
+      // Get DOM elements
+      const $url = document.getElementById('url');
+      const $qr = document.getElementById('qr');
+
+      console.log('DOM elements:', { url: !!$url, qr: !!$qr });
+
+      if ($url) {
+        $url.textContent = url;
+        $url.setAttribute('href', url);
+      }
+
+      // Generate QR code
+      if (typeof window.qrcode !== 'function') {
+        console.error(' qrcode library not available');
+        return;
+      }
+
+      try {
+        const qr = window.qrcode(4, 'L');
+        qr.addData(url);
+        qr.make();
+        const qrHtml = qr.createImgTag(4);
+
+        if ($qr) {
+          $qr.innerHTML = qrHtml;
+          console.log('%c✓✓✓ QR CODE GENERATED', 'color: green; font-weight: bold;');
+        }
+      } catch (e) {
+        console.error('Error generating QR:', e);
+      }
+
+      socket.emit('join-display');
+      console.log('Display: sent join-display event');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('%c✗ SOCKET DISCONNECTED', 'color: red;');
+    });
+
+    socket.on('error', (error) => {
+      console.error('%c✗ SOCKET ERROR', 'color: red;', error);
+    });
+
+    socket.on('render-data', (data) => {
+      // Check if this is a button event
+      if (data && data.button) {
+        if (data.button === 'rotate') {
+          console.log('Display: Button event - Rotate');
+          toggleRotate();
+        } else if (data.button === 'print') {
+          console.log('Display: Button event - Print');
+          saveFrame();
+        }
+        return;
+      }
+
+      // console.log('✓ Display received render-data event');
+      // console.log('Data received:', data);
+
+      if (!data) {
+        console.error('Data is null/undefined!');
+        return;
+      }
+
+      // console.log('Updating display with: size=', data.size, 'density=', data.density, 'colour=', data.colour);
+
+      sizeLink = data.sizeLink;
+      gridWidth = data.size;
+      if (sizeLink) {
+        gridHeight = gridWidth;
+      } else {
+        gridHeight = data.size;
+      }
+      newAmount = data.density;
+      colourDensity.user = data.colour;
+      displayDensity.user = data.visibility;
+      strokeChance.user = data.lines;
+      colourPalette = data.look;
+      extrudeChance.user = data.extrude;
+      autoMove = data.auto;
+
+      frameLine = data.lines === 10;
+
+      hueShift = data.hueShift;
+      lightnessVariance.user = data.lightnessVariance;
+      heightFactor = data.extrudeHeight * reScale;
+
+      newBottomMargin = data.bottomMargin;
+      positionAdjust.user = data.positionAdjust * blockUnit;
+      centreWeighted.user = data.centreWeighted;
+
+      increment = data.transitionSpeed * 0.001;
+      easy = data.easing;
+      pause = data.pause;
+      pointRefresh = data.refresh;
+
+      strokeW.user = data.lineWeight * reScale;
+      strokeWB.user = data.lineWeightB * reScale;
+      strokeVariance.user = data.balance;
+      border = data.border;
+
+      bug = data.debug;
+      info = data.info;
+      heightCalc = data.heightCalc;
+
+      console.log('✓ Display values updated');
+    });
+  } catch (e) {
+    console.log('Socket.io not available:', e);
+  }
 }
 function draw() {
+  // Ensure colourPalette is valid
+  if (colourPalette < 0 || colourPalette >= swatchHSL.length) {
+    colourPalette = 0;
+  }
+
   background(swatchHSL[colourPalette][0][0][0], swatchHSL[colourPalette][0][0][1], swatchHSL[colourPalette][0][0][2]);
-  panelSet();
   strokeWeight(strokeW.base);
+
+  // Update all values (interpolate from current to target)
+  updateValue(displayDensity);
+  listenforValue(displayDensity);
+  updateValue(colourDensity);
+  listenforValue(colourDensity);
+  updateValue(displayRotation);
+  listenforValue(displayRotation);
+  updateValue(extrudeChance);
+  listenforValue(extrudeChance);
+  updateValue(strokeChance);
+  listenforValue(strokeChance);
+  updateValue(strokeVariance);
+  listenforValue(strokeVariance);
+  updateValue(centreWeighted);
+  listenforValue(centreWeighted);
+  updateValue(positionAdjust);
+  listenforValue(positionAdjust);
+  updateValue(lightnessVariance);
+  listenforValue(lightnessVariance);
+  updateValue(strokeW);
+  listenforValue(strokeW);
+  updateValue(strokeWB);
+  listenforValue(strokeWB);
+  for (let i = 0; i < 70; i++) {
+    updateValue(lineHDisplay[i]);
+    listenforValue(lineHDisplay[i]);
+    updateValue(lineVDisplay[i]);
+    listenforValue(lineVDisplay[i]);
+    for (let j = 0; j < 70; j++) {
+      updateValue(blockCounter[i][j]);
+      listenforValue(blockCounter[i][j]);
+      updateValue(blockHCounter[i][j]);
+      listenforValue(blockHCounter[i][j]);
+    }
+  }
+
   if (counter < 1) {
     counter += increment;
   }
-  listen();
   margins = {
     startX: lerp(fromMargins.startX, toMargins.startX, ezEase(counter, easy)),
-    endX:   lerp(fromMargins.endX,   toMargins.endX,   ezEase(counter, easy)),
+    endX: lerp(fromMargins.endX, toMargins.endX, ezEase(counter, easy)),
     startY: lerp(fromMargins.startY, toMargins.startY, ezEase(counter, easy)),
-    endY:   lerp(fromMargins.endY,   toMargins.endY,   ezEase(counter, easy))
+    endY: lerp(fromMargins.endY, toMargins.endY, ezEase(counter, easy))
   };
   if (frameCount % pause == 0 && counter >= 1) {
     tick++;
@@ -176,7 +378,7 @@ function draw() {
   if (info) {
     infoPanel();
   }
-  if(border){
+  if (border) {
     push();
     fill(255);
     rect(0, 0, margins.startX, height);
@@ -225,40 +427,33 @@ function listen() {
 function auto(tempo) {
   if (!autoPaused && frameCount % pause == 0 && tempo % 3 == 0 && autoMove) {
     newAmount = Math.floor(random(4, 31));
-    panel0.setValue("Density", newAmount);
     autoValue(displayDensity, 3, 10, 50);
-    panel0.setValue("Visibility", displayDensity.to);
     autoValue(colourDensity, 0, 10, 50);
-    panel0.setValue("Colour", colourDensity.to);
-    if(random() < 0.2) {
+    if (random() < 0.2) {
       toggleRotate();
     }
     autoValue(extrudeChance, 0, 10, 50, true, 20);
-    panel0.setValue("Extrude", extrudeChance.to);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;
-    panel0.setValue("Size", gridWidth);
     if (sizeLink) {
       gridHeight = gridWidth;
-    } else {  
+    } else {
       random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
-      panel0.setValue("Size", gridHeight);
     }
-    panel0.setValue("Size", gridHeight);
     // 
-   
-}
-function autoRedundant(tempo){
-  autoValue(strokeChance, 0, 3, 50);
-  panel0.setValue("Lines", strokeChance.to);
-  autoValue(strokeVariance, 0, 5, 50);
-  panel4.setValue("Balance", strokeVariance.to);
-  autoValue(centreWeighted, 0, 10, 10);
-  panel2.setValue("Centre Weighted", centreWeighted.to);
-  for (let i = 0; i < 70; i++) {
-    autoValue(lineHDisplay[i], 0, 1, 50, true);
-    autoValue(lineVDisplay[i], 0, 1, 50, true);
+
   }
-}
+  function autoRedundant(tempo) {
+    autoValue(strokeChance, 0, 3, 50);
+    panel0.setValue("Lines", strokeChance.to);
+    autoValue(strokeVariance, 0, 5, 50);
+    panel4.setValue("Balance", strokeVariance.to);
+    autoValue(centreWeighted, 0, 10, 10);
+    panel2.setValue("Centre Weighted", centreWeighted.to);
+    for (let i = 0; i < 70; i++) {
+      autoValue(lineHDisplay[i], 0, 1, 50, true);
+      autoValue(lineVDisplay[i], 0, 1, 50, true);
+    }
+  }
 }
 function marginCalc(artWidth, artHeight, bot) {
   let a = artWidth * blockUnit;
@@ -442,12 +637,12 @@ function colourTransitionUpdater() {
     for (let j = 0; j < amount - 1; j++) {
       // Determine target color state
       let targetState = fillColour2D[i][j] >= colourDensity.base ? 1 : 0;
-      
+
       // Update target if changed
       if (colourTarget2D[i][j] !== targetState) {
         colourTarget2D[i][j] = targetState;
       }
-      
+
       // Smooth transition towards target
       if (colourTransition2D[i][j] < colourTarget2D[i][j]) {
         colourTransition2D[i][j] = min(colourTransition2D[i][j] + 0.05, colourTarget2D[i][j]);
@@ -686,23 +881,23 @@ function blockDisplay(input) {
 }
 function loadColour(i, j, colShift) {
   let h, s, l;
-  
+
   // Get neutral color (colShift = 0)
   let neutralH = swatchHSL[colourPalette][1][rCol2D[i][j]][0] + hueShift;
   let neutralS = swatchHSL[colourPalette][1][rCol2D[i][j]][1];
   let neutralL = swatchHSL[colourPalette][1][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
-  
+
   // Get colorful color (colShift = 1)
   let colorfulH = swatchHSL[colourPalette][2][rCol2D[i][j]][0] + hueShift;
   let colorfulS = swatchHSL[colourPalette][2][rCol2D[i][j]][1];
   let colorfulL = swatchHSL[colourPalette][2][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
-  
+
   // Lerp between neutral and colorful based on transition value
   let transitionValue = colourTransition2D[i][j];
   h = lerp(neutralH, colorfulH, transitionValue);
   s = lerp(neutralS, colorfulS, transitionValue);
   l = lerp(neutralL, colorfulL, transitionValue);
-  
+
   return {
     h: h,
     s: s,
@@ -731,6 +926,20 @@ function ezEase(x, curve) {
   let a = curve; //5
   return x < 0.5 ? (Math.pow(2, a - 1) * Math.pow(x, a)) : 1 - (Math.pow(-2 * x + 2, a) / 2);
 }
+
+let isRotated = false;
+
+function toggleRotate() {
+  isRotated = !isRotated;
+  displayRotation.user = isRotated ? 1 : 0;
+  console.log('Display: Rotation toggled to', isRotated ? 'ON (45°)' : 'OFF (0°)');
+}
+
+function saveFrame() {
+  saveCanvas('DSR-' + Date.now(), 'png');
+  console.log('Display: Screenshot saved');
+}
+
 function fullScreen() {
   const div = document.getElementById('defaultCanvas0');
   if (div != null) {
