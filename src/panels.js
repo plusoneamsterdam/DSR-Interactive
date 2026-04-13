@@ -7,7 +7,6 @@ var panel0 = QuickSettings.create(10, 10, "Shortlist")
   .addRange("Look", 0, 4, 1, 1)
   .addRange("Extrude", 0, 10, 0, 1)
   .addButton("Rotate", function () { toggleRotate() })
-  .addBoolean("Auto", false)
 
 var panel1 = QuickSettings.create(10, 280, "Look")
   .addRange("Hue Shift", -100, 100, 0, 1)

@@ -136,7 +136,7 @@ function setup() {
   strokeChance.user = 2;
   colourPalette = 1;
   extrudeChance.user = 0;
-  autoMove = false;
+  autoMove = true;
 
   hueShift = 0;
   lightnessVariance.user = 0;
@@ -150,6 +150,8 @@ function setup() {
   easy = 5;
   pause = 100;
   pointRefresh = 0.6;
+
+  console.log('DEBUG: Setup complete. autoMove =', autoMove, '| displayDensity.user =', displayDensity.user);
 
   strokeW.user = 1.5 * reScale;
   strokeWB.user = 20 * reScale;
@@ -228,18 +230,28 @@ function setup() {
       }
 
       socket.emit('join-display');
+      autoMove = false;
       console.log('Display: sent join-display event');
+      console.log('DEBUG: autoMove set to FALSE - Phone connected');
     });
 
     socket.on('disconnect', () => {
       console.log('%c✗ SOCKET DISCONNECTED', 'color: red;');
+      autoMove = true;
+      console.log('DEBUG: autoMove set to TRUE - Phone disconnected');
     });
 
     socket.on('error', (error) => {
       console.error('%c✗ SOCKET ERROR', 'color: red;', error);
     });
 
+    socket.on('auto-control', (data) => {
+      autoMove = data.autoMove;
+      console.log('DEBUG: Auto control received from server: autoMove =', data.autoMove);
+    });
+
     socket.on('render-data', (data) => {
+      console.log('DEBUG: Received render-data event', data);
       // Check if this is a button event
       if (data && data.button) {
         if (data.button === 'rotate') {
@@ -276,6 +288,7 @@ function setup() {
       colourPalette = data.look;
       extrudeChance.user = data.extrude;
       autoMove = data.auto;
+      console.log('DEBUG: autoMove received from remote =', autoMove);
 
       frameLine = data.lines === 10;
 
@@ -425,8 +438,9 @@ function listen() {
   }
 }
 function auto(tempo) {
+  if (frameCount % 60 == 0) console.log('DEBUG: autoMove =', autoMove, '| autoPaused =', autoPaused);
   if (!autoPaused && frameCount % pause == 0 && tempo % 3 == 0 && autoMove) {
-    newAmount = Math.floor(random(4, 31));
+    newAmount = Math.floor(random(5, 20));
     autoValue(displayDensity, 3, 10, 50);
     autoValue(colourDensity, 0, 10, 50);
     if (random() < 0.2) {
@@ -439,16 +453,12 @@ function auto(tempo) {
     } else {
       random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
     }
-    // 
-
+    autoRedundant();
   }
-  function autoRedundant(tempo) {
+  function autoRedundant() {
     autoValue(strokeChance, 0, 3, 50);
-    panel0.setValue("Lines", strokeChance.to);
     autoValue(strokeVariance, 0, 5, 50);
-    panel4.setValue("Balance", strokeVariance.to);
     autoValue(centreWeighted, 0, 10, 10);
-    panel2.setValue("Centre Weighted", centreWeighted.to);
     for (let i = 0; i < 70; i++) {
       autoValue(lineHDisplay[i], 0, 1, 50, true);
       autoValue(lineVDisplay[i], 0, 1, 50, true);

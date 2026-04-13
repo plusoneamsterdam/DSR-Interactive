@@ -198,180 +198,21 @@
         </div>
 
         <div class="control-group">
-            <button id="rotateBtn">🔄 Rotate</button>
+            <button id="rotateBtn">Rotate</button>
         </div>
 
-        <div class="control-group">
+        <!-- <div class="control-group">
             <label class="checkbox-label">
-                <input type="checkbox" id="auto" value="false">
+                <input type="checkbox" id="auto" value="true">
                 Auto
             </label>
-        </div>
-
-        <h2>Look</h2>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Hue Shift</label>
-                <span class="value-display" id="hueShiftValue">0</span>
-            </div>
-            <input type="range" id="hueShift" min="-100" max="100" value="0">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Lightness Variance</label>
-                <span class="value-display" id="lightnessVarianceValue">0</span>
-            </div>
-            <input type="range" id="lightnessVariance" min="0" max="100" value="0">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Extrude Height</label>
-                <span class="value-display" id="extrudeHeightValue">20</span>
-            </div>
-            <input type="range" id="extrudeHeight" min="0" max="100" value="20" step="0.1">
-        </div>
-
-        <h2>Placement</h2>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Bottom Margin</label>
-                <span class="value-display" id="bottomMarginValue">0</span>
-            </div>
-            <input type="range" id="bottomMargin" min="0" max="2" value="0">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Position Adjust</label>
-                <span class="value-display" id="positionAdjustValue">0</span>
-            </div>
-            <input type="range" id="positionAdjust" min="-10" max="10" value="0" step="0.1">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Centre Weighted</label>
-                <span class="value-display" id="centreWeightedValue">0</span>
-            </div>
-            <input type="range" id="centreWeighted" min="0" max="10" value="0">
-        </div>
-
-        <h2>Movement</h2>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Transition Speed</label>
-                <span class="value-display" id="transitionSpeedValue">7</span>
-            </div>
-            <input type="range" id="transitionSpeed" min="0" max="50" value="7">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Easing</label>
-                <span class="value-display" id="easingValue">5</span>
-            </div>
-            <input type="range" id="easing" min="1" max="10" value="5">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Pause</label>
-                <span class="value-display" id="pauseValue">100</span>
-            </div>
-            <input type="range" id="pause" min="1" max="200" value="100">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Refresh</label>
-                <span class="value-display" id="refreshValue">0.6</span>
-            </div>
-            <input type="range" id="refresh" min="0" max="1" value="0.6" step="0.1">
-        </div>
-
-        <h2>Lines</h2>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Line Weight</label>
-                <span class="value-display" id="lineWeightValue">1.5</span>
-            </div>
-            <input type="range" id="lineWeight" min="0" max="50" value="1.5" step="0.5">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Line Weight B</label>
-                <span class="value-display" id="lineWeightBValue">20</span>
-            </div>
-            <input type="range" id="lineWeightB" min="0" max="50" value="20" step="0.5">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Balance</label>
-                <span class="value-display" id="balanceValue">3</span>
-            </div>
-            <input type="range" id="balance" min="0" max="10" value="3">
-        </div>
-
-        <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="frame" value="false">
-                Frame
-            </label>
-        </div>
-
-        <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="border" value="false">
-                Border
-            </label>
-        </div>
-
-        <h2>Other</h2>
-
-        <div class="control-group">
-            <button id="printBtn">🖨️ Print / Save</button>
-        </div>
-
-        <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="debug" value="false">
-                Debug
-            </label>
-        </div>
-
-        <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="info" value="false">
-                Info
-            </label>
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Height Calc</label>
-                <span class="value-display" id="heightCalcValue">3</span>
-            </div>
-            <input type="range" id="heightCalc" min="0" max="3" value="3">
-        </div>
-
-        <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="sizeLink" checked>
-                Size Link
-            </label>
-        </div>
+        </div> -->
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        console.log('Remote: Script loaded');
         const socket = window.io();
+        console.log('Remote: Socket object created:', socket);
 
         function sendControlUpdate() {
             const data = {
@@ -382,31 +223,28 @@
                 lines: parseFloat(document.getElementById('lines').value),
                 look: parseFloat(document.getElementById('look').value),
                 extrude: parseFloat(document.getElementById('extrude').value),
-                auto: document.getElementById('auto').checked,
+                auto: false,
 
-                hueShift: parseFloat(document.getElementById('hueShift').value),
-                lightnessVariance: parseFloat(document.getElementById('lightnessVariance').value),
-                extrudeHeight: parseFloat(document.getElementById('extrudeHeight').value),
-
-                bottomMargin: parseFloat(document.getElementById('bottomMargin').value),
-                positionAdjust: parseFloat(document.getElementById('positionAdjust').value),
-                centreWeighted: parseFloat(document.getElementById('centreWeighted').value),
-
-                transitionSpeed: parseFloat(document.getElementById('transitionSpeed').value),
-                easing: parseFloat(document.getElementById('easing').value),
-                pause: parseFloat(document.getElementById('pause').value),
-                refresh: parseFloat(document.getElementById('refresh').value),
-
-                lineWeight: parseFloat(document.getElementById('lineWeight').value),
-                lineWeightB: parseFloat(document.getElementById('lineWeightB').value),
-                balance: parseFloat(document.getElementById('balance').value),
-                frame: document.getElementById('frame').checked,
-                border: document.getElementById('border').checked,
-
-                debug: document.getElementById('debug').checked,
-                info: document.getElementById('info').checked,
-                heightCalc: parseFloat(document.getElementById('heightCalc').value),
-                sizeLink: document.getElementById('sizeLink').checked
+                // Default values for other controls
+                sizeLink: true,
+                hueShift: 0,
+                lightnessVariance: 0,
+                extrudeHeight: 20,
+                bottomMargin: 0,
+                positionAdjust: 0,
+                centreWeighted: 0,
+                transitionSpeed: 7,
+                easing: 5,
+                pause: 100,
+                refresh: 0.6,
+                lineWeight: 1.5,
+                lineWeightB: 20,
+                balance: 3,
+                frame: false,
+                border: false,
+                debug: false,
+                info: false,
+                heightCalc: 3
             };
 
             socket.emit('send-to-display', data);
@@ -432,14 +270,52 @@
             socket.emit('send-to-display', { button: 'rotate' });
         });
 
-        document.getElementById('printBtn').addEventListener('click', () => {
-            console.log('Button: Print pressed');
-            socket.emit('send-to-display', { button: 'print' });
+        socket.on('connect', () => {
+            console.log('✓ Remote: CONNECTED to server');
+            setTimeout(sendControlUpdate, 500);
         });
 
-        socket.on('connect', () => {
-            console.log('Remote connected to server');
-            setTimeout(sendControlUpdate, 500);
+        socket.on('connect_error', (error) => {
+            console.log('✗ Remote: CONNECTION ERROR:', error);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('✗ Remote: DISCONNECTED from server');
+        });
+
+        // Listen for value syncs from other remotes
+        socket.on('values-sync', (data) => {
+            console.log('✓ Remote: Syncing values from other phone:', data);
+            
+            // Update all sliders and their display values
+            if (data.size !== undefined) {
+                document.getElementById('size').value = data.size;
+                document.getElementById('sizeValue').textContent = data.size;
+            }
+            if (data.density !== undefined) {
+                document.getElementById('density').value = data.density;
+                document.getElementById('densityValue').textContent = data.density;
+            }
+            if (data.colour !== undefined) {
+                document.getElementById('colour').value = data.colour;
+                document.getElementById('colourValue').textContent = data.colour;
+            }
+            if (data.visibility !== undefined) {
+                document.getElementById('visibility').value = data.visibility;
+                document.getElementById('visibilityValue').textContent = data.visibility;
+            }
+            if (data.lines !== undefined) {
+                document.getElementById('lines').value = data.lines;
+                document.getElementById('linesValue').textContent = data.lines;
+            }
+            if (data.look !== undefined) {
+                document.getElementById('look').value = data.look;
+                document.getElementById('lookValue').textContent = data.look;
+            }
+            if (data.extrude !== undefined) {
+                document.getElementById('extrude').value = data.extrude;
+                document.getElementById('extrudeValue').textContent = data.extrude;
+            }
         });
     </script>
 </body>
