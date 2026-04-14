@@ -1,32 +1,28 @@
-
-// 2025 ok so lines pop top priority
-// transition density instead of pop
-// centre weighting
-// transition between col palettes?!
-
 let points = [];
 let newPoints = [];
-let amount;
-let newAmount;
+let amount = 14;
+let newAmount = 14;
 let lerpedAmount;
-let lerpTo = amount;
+let lerpTo = 14;
 let margins;
-let margin;
-let marginX;
-let marginY;
-let marginFactor = 0.1;
-let counter = 0;
-let increment = 0.01;
-let easy;
-let pause;
-let pointRefresh;
+let fromMargins, toMargins;
 let minimumSpacing;
-let rCol2D, rHeight2D, rExtrude2D, rDisplay2D;
-let colourful;
-let fillColour2D;
-let fillGrey2D;
+let counter = 0;
+let increment = 0.007;
+let easy = 5;
+let pause = 100;
+let pointRefresh = 0.6;
+let marginFactor = 0.1;
+let updateNext = false;
+let diffCount = 0;
 
-// auto //
+let gridVals = [17, 17, 17, 32, 45];
+let gridWidth = 17;
+let gridHeight = 17;
+let blockUnit;
+let newBottomMargin = 0;
+let heightFactor = 0;
+
 let colourDensity;
 let displayDensity;
 let displayRotation;
@@ -38,43 +34,34 @@ let lightnessVariance;
 let positionAdjust;
 let strokeW;
 let strokeWB;
-////////
 
-let gridVals = [10, 17, 17, 17, 17, 17, 31, 37, 60];
-let gridWidth, gridHeight;
-
-let bottomMargin, blockUnit;
-let newBottomMargin;
-let heightFactor;
-let rLine2D;
-let rLightness;
-let rLineThickness2D;
-let rLineThickness2Dnew;
-let frameLine;
-let border;
-let fps = 0;
-let lerpPoints;
-let reScale;
-let bug, info;
-let sizeLink;
-let updateNext = false;
+let paletteNames = ['classic', 'blackYellow', 'blueWhite'];
 let colourPalette = 0;
 let hueShift = 0;
 
-let texture;
-let faceA, faceB, faceC;
-let heightCalc;
-let scaledown;
-let autoMove;
-let tick = 0;
-let fromMargins, toMargins;
-
+let rCol2D, rHeight2D, rExtrude2D, rDisplay2D;
+let rLine2D, rLightness;
+let rLineThickness2D, rLineThickness2Dnew;
+let fillColour2D;
+let colourTransition2D = [];
+let colourTarget2D = [];
 let blockCounter = [];
 let blockHCounter = [];
 let lineHDisplay = [];
 let lineVDisplay = [];
-let colourTransition2D = [];
-let colourTarget2D = [];
+
+let texture;
+let reScale;
+let fps = 0;
+let heightCalc = 3;
+let scaledown;
+let frameLine = false;
+let border = false;
+let bug = false, info = false;
+
+let autoMove = true;
+let tick = 0;
+let sizeLink = true;
 
 function preload() {
   texture = loadImage('../assets/grain.png');
@@ -93,12 +80,12 @@ function textureOverlay() {
   pop();
 }
 function setup() {
-  // createCanvas(2160, 3840);
-  // pixelDensity(1);
   createCanvas(windowHeight / 16 * 9, windowHeight);
   blockUnit = width / 36;
   reScale = height / 3840;
   fullScreen();
+  colorMode(HSL);
+
   displayDensity = setValue();
   colourDensity = setValue();
   displayRotation = setValue();
@@ -124,47 +111,19 @@ function setup() {
       colourTarget2D[i][j] = 0;
     }
   }
-  colorMode(HSL);
 
-  // Initialize default values
-  sizeLink = true;
-  gridWidth = 17;
-  gridHeight = 17;
-  newAmount = 14;
   colourDensity.user = 5;
   displayDensity.user = 10;
   strokeChance.user = 2;
-  colourPalette = 1;
   extrudeChance.user = 0;
-  autoMove = true;
-
-  hueShift = 0;
   lightnessVariance.user = 0;
-  heightFactor = 20 * reScale;
-
-  newBottomMargin = 0;
   positionAdjust.user = 0;
   centreWeighted.user = 0;
-
-  increment = 7 * 0.001;
-  easy = 5;
-  pause = 100;
-  pointRefresh = 0.6;
-
-  console.log('DEBUG: Setup complete. autoMove =', autoMove, '| displayDensity.user =', displayDensity.user);
-
   strokeW.user = 1.5 * reScale;
   strokeWB.user = 20 * reScale;
   strokeVariance.user = 3;
-  frameLine = false;
-  border = false;
+  heightFactor = 20 * reScale;
 
-  bug = false;
-  info = false;
-  heightCalc = 3;
-
-  amount = newAmount;
-  lerpTo = amount;
   minimumSpacing = 40 * reScale;
   margins = marginCalc(gridWidth, gridHeight, newBottomMargin);
   fromMargins = margins;
@@ -179,66 +138,45 @@ function setup() {
   rLineThickness2Dnew = random2D(amount * amount + 100, 1, 9); // old way of doing it?
   rLineThickness2D = rLineThickness2Dnew;
   fillColour2D = random2D(amount * amount + 100, 0, 10);
-  rCol2D = random2D(amount * amount + 100, 0, swatchHSL[0][1].length);
+  rCol2D = random2D(amount * amount + 100, 0, palettes[paletteNames[0]].colorful.length);
   strokeCap(SQUARE);
 
-  // Socket.io listener for remote panel updates - create socket but don't require it for display to work
   try {
     const socket = window.io();
 
-    console.log('Socket created:', socket);
-
-    // Disconnect any existing listeners first
-    socket.off();
-
-    // Set up socket listeners
     socket.on('connect', () => {
       console.log('%c✓ SOCKET CONNECTED', 'color: green; font-weight: bold;', 'ID:', socket.id);
+      const url = `${new URL(`remote.html?id=${socket.id}`, window.location)}`
 
-      const url = `${new URL(`remote.html?id=${socket.id}`, window.location)}`;
-      console.log('Generated URL:', url);
-
-      // Get DOM elements
       const $url = document.getElementById('url');
       const $qr = document.getElementById('qr');
-
-      console.log('DOM elements:', { url: !!$url, qr: !!$qr });
-
       if ($url) {
         $url.textContent = url;
         $url.setAttribute('href', url);
       }
 
       // Generate QR code
-      if (typeof window.qrcode !== 'function') {
-        console.error(' qrcode library not available');
-        return;
-      }
-
-      try {
-        const qr = window.qrcode(4, 'L');
-        qr.addData(url);
-        qr.make();
-        const qrHtml = qr.createImgTag(4);
-
-        if ($qr) {
-          $qr.innerHTML = qrHtml;
-          console.log('%c✓✓✓ QR CODE GENERATED', 'color: green; font-weight: bold;');
+      if (typeof window.qrcode === 'function') {
+        try {
+          const qr = window.qrcode(4, 'L');
+          qr.addData(url);
+          qr.make();
+          if ($qr) {
+            $qr.innerHTML = qr.createImgTag(4);
+            console.log('%c✓ QR CODE GENERATED', 'color: green; font-weight: bold;');
+          }
+        } catch (e) {
+          console.error('QR generation failed:', e);
         }
-      } catch (e) {
-        console.error('Error generating QR:', e);
       }
 
       socket.emit('join-display');
       autoMove = false;
-      console.log('Display: sent join-display event');
-      console.log('DEBUG: autoMove set to FALSE - Phone connected');
     });
 
     socket.on('disconnect', () => {
       console.log('%c✗ SOCKET DISCONNECTED', 'color: red;');
       autoMove = true;
-      console.log('DEBUG: autoMove set to TRUE - Phone disconnected');
     });
 
     socket.on('error', (error) => {
@@ -247,12 +185,10 @@ function setup() {
 
     socket.on('auto-control', (data) => {
       autoMove = data.autoMove;
-      console.log('DEBUG: Auto control received from server: autoMove =', data.autoMove);
     });
 
     socket.on('render-data', (data) => {
-      console.log('DEBUG: Received render-data event', data);
-      // Check if this is a button event
+      // Button events (rotate, print)
       if (data && data.button) {
         if (data.button === 'rotate') {
           console.log('Display: Button event - Rotate');
@@ -264,23 +200,14 @@ function setup() {
         return;
       }
 
-      // console.log('✓ Display received render-data event');
-      // console.log('Data received:', data);
-
       if (!data) {
-        console.error('Data is null/undefined!');
+        console.error('Render data is null/undefined');
         return;
       }
 
-      // console.log('Updating display with: size=', data.size, 'density=', data.density, 'colour=', data.colour);
-
       sizeLink = data.sizeLink;
       gridWidth = data.size;
-      if (sizeLink) {
-        gridHeight = gridWidth;
-      } else {
-        gridHeight = data.size;
-      }
+      gridHeight = sizeLink ? gridWidth : data.size;
       newAmount = data.density;
       colourDensity.user = data.colour;
       displayDensity.user = data.visibility;
@@ -288,14 +215,11 @@ function setup() {
       colourPalette = data.look;
       extrudeChance.user = data.extrude;
       autoMove = data.auto;
-      console.log('DEBUG: autoMove received from remote =', autoMove);
-
       frameLine = data.lines === 10;
 
       hueShift = data.hueShift;
       lightnessVariance.user = data.lightnessVariance;
       heightFactor = data.extrudeHeight * reScale;
-
       newBottomMargin = data.bottomMargin;
       positionAdjust.user = data.positionAdjust * blockUnit;
       centreWeighted.user = data.centreWeighted;
@@ -313,23 +237,19 @@ function setup() {
       bug = data.debug;
       info = data.info;
       heightCalc = data.heightCalc;
-
-      console.log('✓ Display values updated');
     });
   } catch (e) {
     console.log('Socket.io not available:', e);
   }
 }
 function draw() {
-  // Ensure colourPalette is valid
-  if (colourPalette < 0 || colourPalette >= swatchHSL.length) {
+  if (colourPalette < 0 || colourPalette >= 3) {
     colourPalette = 0;
   }
 
-  background(swatchHSL[colourPalette][0][0][0], swatchHSL[colourPalette][0][0][1], swatchHSL[colourPalette][0][0][2]);
+  background(palettes[paletteNames[colourPalette]].base[0][0], palettes[paletteNames[colourPalette]].base[0][1], palettes[paletteNames[colourPalette]].base[0][2]);
   strokeWeight(strokeW.base);
 
-  // Update all values (interpolate from current to target)
   updateValue(displayDensity);
   listenforValue(displayDensity);
   updateValue(colourDensity);
@@ -437,28 +357,32 @@ function listen() {
     }
   }
 }
+
+const autoSizes = [10, 16, 16, 25, 32];
+
 function auto(tempo) {
-  if (frameCount % 60 == 0) console.log('DEBUG: autoMove =', autoMove, '| autoPaused =', autoPaused);
   if (!autoPaused && frameCount % pause == 0 && tempo % 3 == 0 && autoMove) {
-    newAmount = Math.floor(random(5, 20));
-    autoValue(displayDensity, 3, 10, 50);
-    autoValue(colourDensity, 0, 10, 50);
+    newAmount = autoSizes[Math.floor(random(autoSizes.length))];
+
+    autoValue(displayDensity, 5, 10, 50);
+    autoValue(colourDensity, 4, 10, 50);
     if (random() < 0.2) {
       toggleRotate();
     }
-    autoValue(extrudeChance, 0, 10, 50, true, 20);
+    autoValue(extrudeChance, 0, 10, 50, true, 15);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;
     if (sizeLink) {
       gridHeight = gridWidth;
     } else {
       random(100) < 50 ? gridHeight = gridVals[Math.floor(random(gridVals.length))] : null;
     }
+
     autoRedundant();
   }
   function autoRedundant() {
     autoValue(strokeChance, 0, 3, 50);
     autoValue(strokeVariance, 0, 5, 50);
-    autoValue(centreWeighted, 0, 10, 10);
+
     for (let i = 0; i < 70; i++) {
       autoValue(lineHDisplay[i], 0, 1, 50, true);
       autoValue(lineVDisplay[i], 0, 1, 50, true);
@@ -701,7 +625,7 @@ function gridDisplay() {
       blockDisplay(blockCalc(i, j));
       // reroll..
       if (scaledown == 0) {
-        rCol2D[i][j] = Math.floor(random(0, swatchHSL[0][1].length));
+        rCol2D[i][j] = Math.floor(random(0, palettes[paletteNames[0]].colorful.length));
         rExtrude2D[i][j] = Math.floor(random(0, 10));
         rHeight2D[i][j] = Math.floor(random(1, 7));
         rExtrude2D[i][j] = Math.floor(random(0, 10));
@@ -891,16 +815,19 @@ function blockDisplay(input) {
 }
 function loadColour(i, j, colShift) {
   let h, s, l;
+  const colorIdx = rCol2D[i][j];
+  const paletteName = paletteNames[colourPalette];
+  const lightnessVar = (rLightness[i][j] - 6) * lightnessVariance.base / 50;
 
   // Get neutral color (colShift = 0)
-  let neutralH = swatchHSL[colourPalette][1][rCol2D[i][j]][0] + hueShift;
-  let neutralS = swatchHSL[colourPalette][1][rCol2D[i][j]][1];
-  let neutralL = swatchHSL[colourPalette][1][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
+  let neutralH = palettes[paletteName].neutral[colorIdx][0] + hueShift;
+  let neutralS = palettes[paletteName].neutral[colorIdx][1];
+  let neutralL = palettes[paletteName].neutral[colorIdx][2] + lightnessVar;
 
   // Get colorful color (colShift = 1)
-  let colorfulH = swatchHSL[colourPalette][2][rCol2D[i][j]][0] + hueShift;
-  let colorfulS = swatchHSL[colourPalette][2][rCol2D[i][j]][1];
-  let colorfulL = swatchHSL[colourPalette][2][rCol2D[i][j]][2] + (rLightness[i][j] - 6) * lightnessVariance.base / 50;
+  let colorfulH = palettes[paletteName].colorful[colorIdx][0] + hueShift;
+  let colorfulS = palettes[paletteName].colorful[colorIdx][1];
+  let colorfulL = palettes[paletteName].colorful[colorIdx][2] + lightnessVar;
 
   // Lerp between neutral and colorful based on transition value
   let transitionValue = colourTransition2D[i][j];
@@ -916,9 +843,10 @@ function loadColour(i, j, colShift) {
 }
 function loadLineColour() {
   let h, s, l;
-  h = swatchHSL[colourPalette][0][1][0];
-  s = swatchHSL[colourPalette][0][1][1];
-  l = swatchHSL[colourPalette][0][1][2];
+  const paletteName = paletteNames[colourPalette];
+  h = palettes[paletteName].base[1][0];
+  s = palettes[paletteName].base[1][1];
+  l = palettes[paletteName].base[1][2];
   return {
     h: h,
     s: s,
@@ -926,7 +854,6 @@ function loadLineColour() {
   }
 }
 function minorAdjustment(a) {
-  // sort out that little jagged edge
   let b = a * sqrt(2);
   let c = (a - b) / 2;
   let d = c / sqrt(2);

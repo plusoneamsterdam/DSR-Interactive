@@ -4,7 +4,7 @@ var panel0 = QuickSettings.create(10, 10, "Shortlist")
   .addRange("Colour", 0, 10, 5, 1)
   .addRange("Visibility", 0, 10, 10, 1)
   .addRange("Lines", 0, 10, 2, 1)
-  .addRange("Look", 0, 4, 1, 1)
+  .addRange("Look", 0, 1, 1, 1)
   .addRange("Extrude", 0, 10, 0, 1)
   .addButton("Rotate", function () { toggleRotate() })
 
