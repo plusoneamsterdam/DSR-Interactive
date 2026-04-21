@@ -50,6 +50,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send-to-display', (data) => {
+        // Guard against null/undefined data (e.g., sent before setup() completes)
+        if (!data) {
+            console.log('✗ Received null/undefined data, ignoring');
+            return;
+        }
+
         console.log('✓ DATA received. Type:', data.button ? 'BUTTON' : 'SLIDER');
         // Mark as remote if it hasn't been marked yet
         if (!socket._isDisplay && socket._markedAsRemote !== true) {
@@ -58,14 +64,14 @@ io.on('connection', (socket) => {
             console.log(`✓ REMOTE identified (${remoteClientsCount} remotes connected)`);
             updateAutoState();
         }
-        
+
         // Send to display
         if (displaySocket) {
             displaySocket.emit('render-data', data);
         } else {
             console.log('✗ No display socket connected, dropping data');
         }
-        
+
         // Broadcast to other remotes so they see the same values
         socket.broadcast.emit('values-sync', data);
     });

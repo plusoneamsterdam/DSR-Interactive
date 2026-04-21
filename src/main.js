@@ -35,7 +35,7 @@ let positionAdjust;
 let strokeW;
 let strokeWB;
 
-let paletteNames = ['classic', 'blackYellow', 'blueWhite'];
+let paletteNames = ['classic', 'blueWhite'];
 let colourPalette = 0;
 let hueShift = 0;
 
@@ -62,9 +62,10 @@ let bug = false, info = false;
 let autoMove = true;
 let tick = 0;
 let sizeLink = true;
+let rotationCooldown = 0;
 
 function preload() {
-  texture = loadImage('../assets/grain.png');
+  texture = loadImage('assets/grain.png');
 }
 function textureOverlay() {
   push();
@@ -212,10 +213,15 @@ function setup() {
       colourDensity.user = data.colour;
       displayDensity.user = data.visibility;
       strokeChance.user = data.lines;
-      colourPalette = data.look;
+      colourPalette = Math.max(0, Math.min(1, Math.round(data.look)));
       extrudeChance.user = data.extrude;
-      autoMove = data.auto;
+      autoMove = false;  // Disable auto when remote is controlling
       frameLine = data.lines === 10;
+
+      // Handle rotation from slider
+      if (data.displayRotation !== undefined) {
+        displayRotation.user = data.displayRotation;
+      }
 
       hueShift = data.hueShift;
       lightnessVariance.user = data.lightnessVariance;
@@ -243,7 +249,7 @@ function setup() {
   }
 }
 function draw() {
-  if (colourPalette < 0 || colourPalette >= 3) {
+  if (colourPalette < 0 || colourPalette >= 2) {
     colourPalette = 0;
   }
 
@@ -358,7 +364,7 @@ function listen() {
   }
 }
 
-const autoSizes = [10, 16, 16, 25, 32];
+const autoSizes = [10, 16, 16, 16, 25, 32];
 
 function auto(tempo) {
   if (!autoPaused && frameCount % pause == 0 && tempo % 3 == 0 && autoMove) {
@@ -366,8 +372,11 @@ function auto(tempo) {
 
     autoValue(displayDensity, 5, 10, 50);
     autoValue(colourDensity, 4, 10, 50);
-    if (random() < 0.2) {
+    if (random() < 0.2 && rotationCooldown >= 3) {
       toggleRotate();
+      rotationCooldown = 0;
+    } else {
+      rotationCooldown++;
     }
     autoValue(extrudeChance, 0, 10, 50, true, 15);
     random(100) < 50 ? gridWidth = gridVals[Math.floor(random(gridVals.length))] : null;

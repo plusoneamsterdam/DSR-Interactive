@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remote</title>
+    <title>Remote Control</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
     <style>
         * {
@@ -16,259 +16,30 @@
         body {
             font-family: Arial, sans-serif;
             background: #f0f0f0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-
-        h2 {
-            font-size: 14px;
-            margin: 20px 0 15px 0;
-            padding-top: 15px;
-            border-top: 2px solid #007AFF;
-            color: #007AFF;
-            font-weight: bold;
-        }
-
-        h2:first-of-type {
-            border-top: none;
-            margin-top: 0;
-            padding-top: 0;
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .control-group:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            cursor: pointer;
-        }
-
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .label-with-value {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-        }
-
-        .value-display {
-            background: #f5f5f5;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #666;
-            min-width: 40px;
-            text-align: right;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #007AFF;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 8px;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #005BBD;
-        }
-
-        button:active {
-            background: #004499;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-weight: normal;
-        }
-
-        .checkbox-label input {
-            margin: 0;
+            min-height: 100dvh;
+            overflow: hidden;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🎛️ Control Panel</h1>
-
-        <h2>Shortlist</h2>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Size</label>
-                <span class="value-display" id="sizeValue">17</span>
-            </div>
-            <input type="range" id="size" min="1" max="64" value="17">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Density</label>
-                <span class="value-display" id="densityValue">14</span>
-            </div>
-            <input type="range" id="density" min="4" max="30" value="14">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Colour</label>
-                <span class="value-display" id="colourValue">5</span>
-            </div>
-            <input type="range" id="colour" min="0" max="10" value="5">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Visibility</label>
-                <span class="value-display" id="visibilityValue">10</span>
-            </div>
-            <input type="range" id="visibility" min="0" max="10" value="10">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Lines</label>
-                <span class="value-display" id="linesValue">2</span>
-            </div>
-            <input type="range" id="lines" min="0" max="10" value="2">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Look (Palette)</label>
-                <span class="value-display" id="lookValue">1</span>
-            </div>
-            <input type="range" id="look" min="0" max="2" value="0">
-        </div>
-
-        <div class="control-group">
-            <div class="label-with-value">
-                <label>Extrude</label>
-                <span class="value-display" id="extrudeValue">0</span>
-            </div>
-            <input type="range" id="extrude" min="0" max="10" value="0">
-        </div>
-
-        <div class="control-group">
-            <button id="rotateBtn">Rotate</button>
-        </div>
-
-        <!-- <div class="control-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="auto" value="true">
-                Auto
-            </label>
-        </div> -->
-    </div>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="libraries/p5.min.js"></script>
+    <script src="src/controls.js"></script>
+
     <script>
-        console.log('Remote: Script loaded');
         const socket = window.io();
-        console.log('Remote: Socket object created:', socket);
+        let isSetupComplete = false;
 
         function sendControlUpdate() {
-            const data = {
-                size: parseFloat(document.getElementById('size').value),
-                density: parseFloat(document.getElementById('density').value),
-                colour: parseFloat(document.getElementById('colour').value),
-                visibility: parseFloat(document.getElementById('visibility').value),
-                lines: parseFloat(document.getElementById('lines').value),
-                look: parseFloat(document.getElementById('look').value),
-                extrude: parseFloat(document.getElementById('extrude').value),
-                auto: false,
-
-                // Default values for other controls
-                sizeLink: true,
-                hueShift: 0,
-                lightnessVariance: 0,
-                extrudeHeight: 20,
-                bottomMargin: 0,
-                positionAdjust: 0,
-                centreWeighted: 0,
-                transitionSpeed: 7,
-                easing: 5,
-                pause: 100,
-                refresh: 0.6,
-                lineWeight: 1.5,
-                lineWeightB: 20,
-                balance: 3,
-                frame: false,
-                border: false,
-                debug: false,
-                info: false,
-                heightCalc: 3
-            };
-
-            socket.emit('send-to-display', data);
+            if (typeof getControlsData === 'function' && isSetupComplete) {
+                const data = getControlsData();
+                socket.emit('send-to-display', data);
+            }
         }
-
-        document.querySelectorAll('input[type="range"]').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const valueId = e.target.id + 'Value';
-                const display = document.getElementById(valueId);
-                if (display) {
-                    display.textContent = e.target.value;
-                }
-                sendControlUpdate();
-            });
-        });
-
-        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
-            input.addEventListener('change', sendControlUpdate);
-        });
-
-        document.getElementById('rotateBtn').addEventListener('click', () => {
-            console.log('Button: Rotate pressed');
-            socket.emit('send-to-display', { button: 'rotate' });
-        });
 
         socket.on('connect', () => {
             console.log('✓ Remote: CONNECTED to server');
@@ -283,40 +54,88 @@
             console.log('✗ Remote: DISCONNECTED from server');
         });
 
-        // Listen for value syncs from other remotes
+        // Sync sliders when other remotes send updates
         socket.on('values-sync', (data) => {
-            console.log('✓ Remote: Syncing values from other phone:', data);
-            
-            // Update all sliders and their display values
-            if (data.size !== undefined) {
-                document.getElementById('size').value = data.size;
-                document.getElementById('sizeValue').textContent = data.size;
-            }
-            if (data.density !== undefined) {
-                document.getElementById('density').value = data.density;
-                document.getElementById('densityValue').textContent = data.density;
-            }
-            if (data.colour !== undefined) {
-                document.getElementById('colour').value = data.colour;
-                document.getElementById('colourValue').textContent = data.colour;
-            }
-            if (data.visibility !== undefined) {
-                document.getElementById('visibility').value = data.visibility;
-                document.getElementById('visibilityValue').textContent = data.visibility;
-            }
-            if (data.lines !== undefined) {
-                document.getElementById('lines').value = data.lines;
-                document.getElementById('linesValue').textContent = data.lines;
-            }
+            if (!data) return;
+
+            // Update slider positions from received values
+            if (data.size !== undefined) sizeSliderY = map(data.size, 10, 34, sizeSliderMinY, sizeSliderMaxY);
+            if (data.density !== undefined) densitySliderX = map(data.density, 4, 30, densitySliderMinX, densitySliderMaxX);
+            if (data.extrude !== undefined) extrudeSliderY = map(data.extrude, 0, 10, extrudeSliderMinY, extrudeSliderMaxY);
+            if (data.visibility !== undefined) visibilitySliderY = map(data.visibility, 3, 10, visibilitySliderMinY, visibilitySliderMaxY);
             if (data.look !== undefined) {
-                document.getElementById('look').value = data.look;
-                document.getElementById('lookValue').textContent = data.look;
+                // Map smooth look value back to slider position
+                lookSliderX = map(data.look, 1, 0, lookSliderMinX, lookSliderMaxX);
             }
-            if (data.extrude !== undefined) {
-                document.getElementById('extrude').value = data.extrude;
-                document.getElementById('extrudeValue').textContent = data.extrude;
+            if (data.lines !== undefined) linesSliderX = map(data.lines, 0, 10, linesSliderMinX, linesSliderMaxX);
+            if (data.colour !== undefined) colorSliderY = map(data.colour, 0, 10, colorSliderMinY, colorSliderMaxY);
+            if (data.displayRotation !== undefined) {
+                rotationSliderTargetX = data.displayRotation ? rotationSliderMaxX : rotationSliderMinX;
             }
         });
+
+        // Override p5.js setup for remote control (smaller canvas)
+        let originalSetup = undefined;
+
+        function setup() {
+            createCanvas(400, 650);
+            isSetupComplete = true;
+        }
+
+        // Draw function is already defined in controls.js, just use it
+
+        function checkSliderClick(sliderName, sliderX, sliderY, sliderRadius) {
+            return dist(mouseX, mouseY, sliderX, sliderY) < sliderRadius;
+        }
+
+        function mousePressed() {
+            draggingSizeSlider = false;
+            draggingExtrudeSlider = false;
+            draggingDensitySlider = false;
+            draggingVisibilitySlider = false;
+            draggingLookSlider = false;
+            draggingLinesSlider = false;
+            draggingColorSlider = false;
+            draggingRotationSlider = false;
+
+            if (checkSliderClick('look', lookSliderX, lookSliderY, lookSliderRadius)) draggingLookSlider = true;
+            else if (checkSliderClick('visibility', visibilitySliderX, visibilitySliderY, visibilitySliderRadius)) draggingVisibilitySlider = true;
+            else if (checkSliderClick('extrude', extrudeSliderX, extrudeSliderY, extrudeSliderRadius)) draggingExtrudeSlider = true;
+            else if (checkSliderClick('lines', linesSliderX, linesSliderY, linesSliderRadius)) draggingLinesSlider = true;
+            else if (checkSliderClick('rotation', rotationSliderX, rotationSliderY, rotationSliderRadius)) {
+                draggingRotationSlider = true;
+                rotationSliderDragStart = mouseX;
+            }
+            else if (checkSliderClick('color', colorSliderX, colorSliderY, colorSliderRadius)) draggingColorSlider = true;
+            else if (checkSliderClick('density', densitySliderX, densitySliderY, densitySliderRadius)) draggingDensitySlider = true;
+            else if (checkSliderClick('size', sizeSliderX, sizeSliderY, sizeSliderRadius)) draggingSizeSlider = true;
+        }
+
+        function mouseDragged() {
+            if (draggingSizeSlider) sizeSliderY = constrain(mouseY, sizeSliderMinY, sizeSliderMaxY);
+            else if (draggingExtrudeSlider) extrudeSliderY = constrain(mouseY, extrudeSliderMinY, extrudeSliderMaxY);
+            else if (draggingDensitySlider) densitySliderX = constrain(mouseX, densitySliderMinX, densitySliderMaxX);
+            else if (draggingVisibilitySlider) visibilitySliderY = constrain(mouseY, visibilitySliderMinY, visibilitySliderMaxY);
+            else if (draggingRotationSlider) {
+                rotationSliderTargetX = (mouseX > rotationSliderDragStart) ? rotationSliderMaxX : rotationSliderMinX;
+            }
+            else if (draggingLookSlider) lookSliderX = constrain(mouseX, lookSliderMinX, lookSliderMaxX);
+            else if (draggingLinesSlider) linesSliderX = constrain(mouseX, linesSliderMinX, linesSliderMaxX);
+            else if (draggingColorSlider) colorSliderY = constrain(mouseY, colorSliderMinY, colorSliderMaxY);
+
+            sendControlUpdate();
+        }
+
+        function mouseReleased() {
+            draggingSizeSlider = false;
+            draggingExtrudeSlider = false;
+            draggingDensitySlider = false;
+            draggingVisibilitySlider = false;
+            draggingRotationSlider = false;
+            draggingLookSlider = false;
+            draggingLinesSlider = false;
+            draggingColorSlider = false;
+        }
     </script>
 </body>
 
