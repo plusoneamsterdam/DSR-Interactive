@@ -147,32 +147,38 @@ function setup() {
 
     socket.on('connect', () => {
       console.log('%c✓ SOCKET CONNECTED', 'color: green; font-weight: bold;', 'ID:', socket.id);
-      const url = `${new URL(`remote.html?id=${socket.id}`, window.location)}`
-
-      const $url = document.getElementById('url');
-      const $qr = document.getElementById('qr');
-      if ($url) {
-        $url.textContent = url;
-        $url.setAttribute('href', url);
-      }
-
-      // Generate QR code
-      if (typeof window.qrcode === 'function') {
-        try {
-          const qr = window.qrcode(4, 'L');
-          qr.addData(url);
-          qr.make();
-          if ($qr) {
-            $qr.innerHTML = qr.createImgTag(4);
-            console.log('%c✓ QR CODE GENERATED', 'color: green; font-weight: bold;');
-          }
-        } catch (e) {
-          console.error('QR generation failed:', e);
-        }
-      }
-
       socket.emit('join-display');
       autoMove = false;
+    });
+
+    socket.on('display-room-id', (data) => {
+      const roomId = data.roomId;
+      console.log('%c✓ ROOM ASSIGNED', 'color: green; font-weight: bold;', 'Room:', roomId);
+
+      const url = `${new URL(`remote.html?room=${roomId}`, window.location)}`;
+      const $qr = document.getElementById('qr');
+
+      console.log('QR container element:', $qr);
+      console.log('qrcode globally available:', typeof qrcode);
+      console.log('URL to encode:', url);
+
+      if ($qr) {
+        if (typeof qrcode !== 'undefined') {
+          try {
+            const qr = qrcode(4, 'L');
+            qr.addData(url);
+            qr.make();
+            $qr.innerHTML = qr.createImgTag(4);
+            console.log('%c✓ QR CODE GENERATED AND DISPLAYED', 'color: green; font-weight: bold;');
+          } catch (e) {
+            console.error('QR generation failed:', e);
+          }
+        } else {
+          console.error('❌ qrcode library not loaded');
+        }
+      } else {
+        console.error('❌ QR container element not found');
+      }
     });
 
     socket.on('disconnect', () => {

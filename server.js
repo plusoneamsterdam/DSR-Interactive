@@ -12,16 +12,26 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-let displaySocket = null;
-let remoteClientsCount = 0;
+// Track displays and remotes by room
+let displays = {}; // { roomId: socketId }
+let remoteClientCounts = {}; // { roomId: count }
 
-function updateAutoState() {
-    if (displaySocket) {
-        const shouldAutoPlay = remoteClientsCount === 0;
-        displaySocket.emit('auto-control', { autoMove: shouldAutoPlay });
-        console.log(`→ Sent auto state to display: autoMove = ${shouldAutoPlay} (remoteClientsCount=${remoteClientsCount})`);
+// Generate unique room ID
+function generateRoomId() {
+    return 'room-' + Math.random().toString(36).substr(2, 9);
+}
+
+function updateAutoState(roomId) {
+    const displaySocketId = displays[roomId];
+    if (displaySocketId) {
+        const displaySocket = io.sockets.sockets.get(displaySocketId);
+        if (displaySocket) {
+            const shouldAutoPlay = (remoteClientCounts[roomId] || 0) === 0;
+            displaySocket.emit('auto-control', { autoMove: shouldAutoPlay });
+            console.log(`→ Sent auto state to display ${roomId}: autoMove = ${shouldAutoPlay} (remoteClientsCount=${remoteClientCounts[roomId] || 0})`);
+        }
     } else {
-        console.log('✗ updateAutoState: No display socket connected');
+        console.log(`✗ updateAutoState: No display socket connected for room ${roomId}`);
     }
 }
 
@@ -39,52 +49,71 @@ io.on('connection', (socket) => {
     console.log('✓ CLIENT connected! Socket ID:', socket.id);
     console.log('Total connected clients:', io.engine.clientsCount);
 
-    // Track if this socket is the display or a remote
+    socket._roomId = null;
     socket._isDisplay = false;
+    socket._isRemote = false;
 
     socket.on('join-display', () => {
-        displaySocket = socket;
+        const roomId = generateRoomId();
+        socket._roomId = roomId;
         socket._isDisplay = true;
-        console.log('✓ DISPLAY identified. Socket ID:', socket.id);
-        updateAutoState();
+        displays[roomId] = socket.id;
+        remoteClientCounts[roomId] = 0;
+        socket.join(roomId);
+
+        console.log(`✓ DISPLAY identified. Socket ID: ${socket.id}, Room: ${roomId}`);
+        socket.emit('display-room-id', { roomId });
+        updateAutoState(roomId);
+    });
+
+    socket.on('join-remote', (data) => {
+        const roomId = data?.roomId;
+        if (!roomId || !displays[roomId]) {
+            console.log(`✗ REMOTE rejected: Invalid room ID ${roomId}`);
+            socket.emit('remote-join-failed', { error: 'Invalid room ID' });
+            return;
+        }
+
+        socket._roomId = roomId;
+        socket._isRemote = true;
+        remoteClientCounts[roomId] = (remoteClientCounts[roomId] || 0) + 1;
+        socket.join(roomId);
+
+        console.log(`✓ REMOTE joined room ${roomId}. Count: ${remoteClientCounts[roomId]}`);
+        socket.emit('remote-join-success', { roomId });
+        updateAutoState(roomId);
     });
 
     socket.on('send-to-display', (data) => {
-        // Guard against null/undefined data (e.g., sent before setup() completes)
         if (!data) {
             console.log('✗ Received null/undefined data, ignoring');
             return;
         }
 
-        console.log('✓ DATA received. Type:', data.button ? 'BUTTON' : 'SLIDER');
-        // Mark as remote if it hasn't been marked yet
-        if (!socket._isDisplay && socket._markedAsRemote !== true) {
-            remoteClientsCount++;
-            socket._markedAsRemote = true;
-            console.log(`✓ REMOTE identified (${remoteClientsCount} remotes connected)`);
-            updateAutoState();
+        const roomId = socket._roomId;
+        if (!roomId) {
+            console.log('✗ send-to-display: Socket not in a room');
+            return;
         }
 
-        // Send to display
-        if (displaySocket) {
-            displaySocket.emit('render-data', data);
-        } else {
-            console.log('✗ No display socket connected, dropping data');
-        }
-
-        // Broadcast to other remotes so they see the same values
-        socket.broadcast.emit('values-sync', data);
+        // Send to all clients in this room
+        io.to(roomId).emit('render-data', data);
+        // Sync to other remotes in the same room
+        socket.broadcast.to(roomId).emit('values-sync', data);
     });
 
     socket.on('disconnect', () => {
         console.log('✗ CLIENT disconnected. Socket ID:', socket.id);
-        if (socket._isDisplay) {
-            displaySocket = null;
-            console.log('  └─ Was the DISPLAY');
-        } else if (socket._markedAsRemote) {
-            remoteClientsCount = Math.max(0, remoteClientsCount - 1);
-            console.log(`  └─ Was a REMOTE (${remoteClientsCount} remotes left)`);
-            updateAutoState();
+        const roomId = socket._roomId;
+
+        if (socket._isDisplay && roomId) {
+            console.log(`  └─ Was the DISPLAY for room ${roomId}`);
+            delete displays[roomId];
+            delete remoteClientCounts[roomId];
+        } else if (socket._isRemote && roomId) {
+            remoteClientCounts[roomId] = Math.max(0, (remoteClientCounts[roomId] || 0) - 1);
+            console.log(`  └─ Was a REMOTE for room ${roomId} (${remoteClientCounts[roomId]} left)`);
+            updateAutoState(roomId);
         }
     });
 });

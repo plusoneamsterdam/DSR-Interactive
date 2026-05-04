@@ -33,9 +33,16 @@
     <script>
         const socket = window.io();
         let isSetupComplete = false;
+        let roomId = null;
+        let isJoinedToRoom = false;
+
+        function getRoomIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('room');
+        }
 
         function sendControlUpdate() {
-            if (typeof getControlsData === 'function' && isSetupComplete) {
+            if (typeof getControlsData === 'function' && isSetupComplete && isJoinedToRoom) {
                 const data = getControlsData();
                 socket.emit('send-to-display', data);
             }
@@ -43,7 +50,21 @@
 
         socket.on('connect', () => {
             console.log('✓ Remote: CONNECTED to server');
-            setTimeout(sendControlUpdate, 500);
+            roomId = getRoomIdFromUrl();
+            if (roomId && isSetupComplete) {
+                socket.emit('join-remote', { roomId });
+            }
+        });
+
+        socket.on('remote-join-success', (data) => {
+            console.log('✓ Remote: Successfully joined room', data.roomId);
+            isJoinedToRoom = true;
+            sendControlUpdate();
+        });
+
+        socket.on('remote-join-failed', (data) => {
+            console.error('✗ Remote: Failed to join room', data.error);
+            alert('Failed to connect to display. Invalid room ID.');
         });
 
         socket.on('connect_error', (error) => {
@@ -52,6 +73,7 @@
 
         socket.on('disconnect', () => {
             console.log('✗ Remote: DISCONNECTED from server');
+            isJoinedToRoom = false;
         });
 
         // Sync sliders when other remotes send updates
@@ -80,6 +102,12 @@
         function setup() {
             createCanvas(400, 650);
             isSetupComplete = true;
+            roomId = getRoomIdFromUrl();
+
+            // Join room after setup completes
+            if (roomId && socket.connected && !isJoinedToRoom) {
+                socket.emit('join-remote', { roomId });
+            }
         }
 
         // Draw function is already defined in controls.js, just use it
@@ -89,6 +117,8 @@
         }
 
         function mousePressed() {
+            if (!isJoinedToRoom) return; // Prevent control before joined
+
             draggingSizeSlider = false;
             draggingExtrudeSlider = false;
             draggingDensitySlider = false;
@@ -112,6 +142,8 @@
         }
 
         function mouseDragged() {
+            if (!isJoinedToRoom) return; // Prevent control before joined
+
             if (draggingSizeSlider) sizeSliderY = constrain(mouseY, sizeSliderMinY, sizeSliderMaxY);
             else if (draggingExtrudeSlider) extrudeSliderY = constrain(mouseY, extrudeSliderMinY, extrudeSliderMaxY);
             else if (draggingDensitySlider) densitySliderX = constrain(mouseX, densitySliderMinX, densitySliderMaxX);
