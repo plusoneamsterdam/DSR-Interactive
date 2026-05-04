@@ -59,7 +59,6 @@
         socket.on('remote-join-success', (data) => {
             console.log('✓ Remote: Successfully joined room', data.roomId);
             isJoinedToRoom = true;
-            sendControlUpdate();
         });
 
         socket.on('remote-join-failed', (data) => {
@@ -109,6 +108,8 @@
                 socket.emit('join-remote', { roomId });
             }
         }
+
+
 
         // Draw function is already defined in controls.js, just use it
 

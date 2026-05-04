@@ -45,6 +45,7 @@ let rLineThickness2D, rLineThickness2Dnew;
 let fillColour2D;
 let colourTransition2D = [];
 let colourTarget2D = [];
+let greyFrameCounter2D = [];
 let blockCounter = [];
 let blockHCounter = [];
 let lineHDisplay = [];
@@ -105,11 +106,13 @@ function setup() {
     lineVDisplay[i] = setValue();
     colourTransition2D[i] = [];
     colourTarget2D[i] = [];
+    greyFrameCounter2D[i] = [];
     for (let j = 0; j < 70; j++) {
       blockCounter[i][j] = setValue();
       blockHCounter[i][j] = setValue();
       colourTransition2D[i][j] = 0;
       colourTarget2D[i][j] = 0;
+      greyFrameCounter2D[i][j] = 0;
     }
   }
 
@@ -192,6 +195,29 @@ function setup() {
 
     socket.on('auto-control', (data) => {
       autoMove = data.autoMove;
+    });
+
+    socket.on('reset-to-defaults', () => {
+      console.log('%c↻ RESET TO DEFAULTS', 'color: orange; font-weight: bold;');
+      // Reset to initial defaults
+      colourDensity.user = 5;
+      displayDensity.user = 10;
+      strokeChance.user = 2;
+      extrudeChance.user = 0;
+      lightnessVariance.user = 0;
+      positionAdjust.user = 0;
+      centreWeighted.user = 0;
+      strokeW.user = 1.5 * reScale;
+      strokeWB.user = 20 * reScale;
+      strokeVariance.user = 3;
+      gridWidth = 17;
+      gridHeight = 17;
+      newAmount = 14;
+      colourPalette = 0;
+      hueShift = 0;
+      frameLine = false;
+      border = false;
+      autoMove = true;
     });
 
     socket.on('render-data', (data) => {
@@ -585,18 +611,30 @@ function colourTransitionUpdater() {
   for (let i = 0; i < amount - 1; i++) {
     for (let j = 0; j < amount - 1; j++) {
       // Determine target color state
-      let targetState = fillColour2D[i][j] >= colourDensity.base ? 1 : 0;
+      let targetState = fillColour2D[i][j] < colourDensity.base ? 1 : 0;
 
       // Update target if changed
       if (colourTarget2D[i][j] !== targetState) {
         colourTarget2D[i][j] = targetState;
+        if (targetState === 0) {
+          // Block is turning grey, start counter
+          greyFrameCounter2D[i][j] = 0;
+        }
       }
 
-      // Smooth transition towards target
-      if (colourTransition2D[i][j] < colourTarget2D[i][j]) {
-        colourTransition2D[i][j] = min(colourTransition2D[i][j] + 0.05, colourTarget2D[i][j]);
-      } else if (colourTransition2D[i][j] > colourTarget2D[i][j]) {
-        colourTransition2D[i][j] = max(colourTransition2D[i][j] - 0.05, colourTarget2D[i][j]);
+      // Snap directly to target state
+      colourTransition2D[i][j] = colourTarget2D[i][j];
+
+      // If block is grey, increment counter
+      if (colourTransition2D[i][j] === 0) {
+        greyFrameCounter2D[i][j]++;
+        // After 2 frames of being grey, force it back to color
+        if (greyFrameCounter2D[i][j] >= 2) {
+          colourTransition2D[i][j] = 1;
+        }
+      } else {
+        // Reset counter when not grey
+        greyFrameCounter2D[i][j] = 0;
       }
     }
   }

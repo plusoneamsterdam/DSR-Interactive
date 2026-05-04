@@ -15,6 +15,8 @@ const io = new Server(server);
 // Track displays and remotes by room
 let displays = {}; // { roomId: socketId }
 let remoteClientCounts = {}; // { roomId: count }
+let displayState = {}; // { roomId: { ...lastValues } }
+let resetTimers = {}; // { roomId: timeoutId } - timers for auto-reset after 3 sec inactivity
 
 // Generate unique room ID
 function generateRoomId() {
@@ -63,6 +65,15 @@ io.on('connection', (socket) => {
 
         console.log(`✓ DISPLAY identified. Socket ID: ${socket.id}, Room: ${roomId}`);
         socket.emit('display-room-id', { roomId });
+
+        // If there's NO saved state for this room, send reset signal
+        if (!displayState[roomId]) {
+            console.log(`✓ No previous state for room ${roomId}, display will use defaults`);
+            socket.emit('reset-to-defaults');
+        } else {
+            console.log(`✓ Previous state exists for room ${roomId}, display will use stored state`);
+        }
+
         updateAutoState(roomId);
     });
 
@@ -79,8 +90,25 @@ io.on('connection', (socket) => {
         remoteClientCounts[roomId] = (remoteClientCounts[roomId] || 0) + 1;
         socket.join(roomId);
 
+        // Cancel any pending reset timer
+        if (resetTimers[roomId]) {
+            clearTimeout(resetTimers[roomId]);
+            delete resetTimers[roomId];
+            console.log(`→ Cancelled reset timer for room ${roomId}`);
+        }
+
         console.log(`✓ REMOTE joined room ${roomId}. Count: ${remoteClientCounts[roomId]}`);
         socket.emit('remote-join-success', { roomId });
+
+        // Send current display state to the remote if it exists
+        if (displayState[roomId]) {
+            console.log(`→ Existing state found for room ${roomId}, syncing state`);
+            socket.emit('values-sync', displayState[roomId]);
+            console.log(`→ Sent current state to remote in room ${roomId}`);
+        } else {
+            console.log(`→ No state exists yet for room ${roomId}, remote will show demo`);
+        }
+
         updateAutoState(roomId);
     });
 
@@ -96,6 +124,9 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Store the current state in the room
+        displayState[roomId] = data;
+
         // Send to all clients in this room
         io.to(roomId).emit('render-data', data);
         // Sync to other remotes in the same room
@@ -109,10 +140,32 @@ io.on('connection', (socket) => {
         if (socket._isDisplay && roomId) {
             console.log(`  └─ Was the DISPLAY for room ${roomId}`);
             delete displays[roomId];
-            delete remoteClientCounts[roomId];
+            // Display state persists for remotes to reconnect
+            console.log(`  └─ Display state for room ${roomId} preserved for reconnecting remotes`);
         } else if (socket._isRemote && roomId) {
             remoteClientCounts[roomId] = Math.max(0, (remoteClientCounts[roomId] || 0) - 1);
             console.log(`  └─ Was a REMOTE for room ${roomId} (${remoteClientCounts[roomId]} left)`);
+
+            // If no more remotes, start auto-reset timer
+            if ((remoteClientCounts[roomId] || 0) === 0) {
+                console.log(`→ No remotes left in room ${roomId}. Starting 3-second reset timer...`);
+                resetTimers[roomId] = setTimeout(() => {
+                    delete displayState[roomId];
+                    delete resetTimers[roomId];
+                    console.log(`✓ Auto-reset: Cleared state for room ${roomId} after 3 seconds inactivity`);
+                }, 3000);
+            }
+
+            // Check if anyone is still in this room
+            const displayExists = !!displays[roomId];
+            const remotesExist = (remoteClientCounts[roomId] || 0) > 0;
+
+            if (!displayExists && !remotesExist) {
+                console.log(`  └─ Room ${roomId} is completely empty`);
+            } else {
+                console.log(`  └─ Room ${roomId} still has clients, state preserved`);
+            }
+
             updateAutoState(roomId);
         }
     });
